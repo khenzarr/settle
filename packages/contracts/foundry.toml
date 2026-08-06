@@ -10,6 +10,9 @@ remappings = [
   "forge-std/=node_modules/forge-std/src/",
 ]
 
+[rpc_endpoints]
+arc_testnet = "${ARC_TESTNET_RPC_URL}"
+
 [invariant]
 runs = 80
 depth = 20

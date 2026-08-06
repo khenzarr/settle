@@ -9,9 +9,13 @@
     "typecheck": "pnpm --recursive --if-present typecheck",
     "test": "pnpm --recursive --if-present test",
     "build:web": "pnpm --filter @settle/web build",
+    "contracts:preflight:arc": "node packages/contracts/scripts/preflight-arc-testnet.mjs",
     "contracts:build": "forge build --root packages/contracts",
     "contracts:abi": "pnpm contracts:build && node packages/contracts/scripts/export-settlement-abi.mjs",
     "contracts:abi:check": "pnpm contracts:build && node packages/contracts/scripts/export-settlement-abi.mjs --check",
+    "contracts:deploy:simulate": "forge script packages/contracts/script/DeploySettlementEscrow.s.sol:DeploySettlementEscrow --root packages/contracts --rpc-url arc_testnet",
+    "contracts:deploy:broadcast": "forge script packages/contracts/script/DeploySettlementEscrow.s.sol:DeploySettlementEscrow --root packages/contracts --rpc-url arc_testnet --broadcast",
+    "contracts:deployment:verify": "forge script packages/contracts/script/VerifySettlementEscrow.s.sol:VerifySettlementEscrow --root packages/contracts --rpc-url arc_testnet",
     "contracts:fmt:check": "forge fmt --check --root packages/contracts",
     "contracts:test": "forge test --root packages/contracts",
     "validate": "pnpm contracts:abi:check && pnpm contracts:fmt:check && pnpm contracts:test && pnpm typecheck"
