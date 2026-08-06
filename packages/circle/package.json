@@ -1,0 +1,34 @@
+{
+  "name": "@settle/circle",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    ".": {
+      "node": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "config:check": "node --env-file-if-exists=../../.env scripts/check-config.ts",
+    "wallet:plan": "node --env-file-if-exists=../../.env scripts/create-deployer-wallet.ts",
+    "wallet:create": "node --env-file-if-exists=../../.env scripts/create-deployer-wallet.ts",
+    "contract:prepare": "node --env-file-if-exists=../../.env scripts/prepare-contract-deployment.ts",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test src/*.test.ts"
+  },
+  "dependencies": {
+    "@circle-fin/developer-controlled-wallets": "10.8.0",
+    "@circle-fin/smart-contract-platform": "10.8.0",
+    "@settle/shared": "workspace:*",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "26.1.2",
+    "typescript": "^5.9.0"
+  }
+}

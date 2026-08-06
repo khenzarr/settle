@@ -16,6 +16,7 @@ broadcast/
 *.log
 .env
 .env.*
+!.env.example
 .cline/
 cline-history/
 prompts/

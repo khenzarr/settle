@@ -18,6 +18,10 @@
     "contracts:deployment:verify": "forge script packages/contracts/script/VerifySettlementEscrow.s.sol:VerifySettlementEscrow --root packages/contracts --rpc-url arc_testnet",
     "contracts:fmt:check": "forge fmt --check --root packages/contracts",
     "contracts:test": "forge test --root packages/contracts",
-    "validate": "pnpm contracts:abi:check && pnpm contracts:fmt:check && pnpm contracts:test && pnpm typecheck"
+    "circle:config:check": "pnpm --filter @settle/circle config:check",
+    "circle:wallet:plan": "pnpm --filter @settle/circle wallet:plan",
+    "circle:wallet:create": "pnpm --filter @settle/circle wallet:create",
+    "circle:contract:prepare": "pnpm contracts:abi:check && pnpm --filter @settle/circle contract:prepare",
+    "validate": "pnpm circle:config:check && pnpm contracts:abi:check && pnpm contracts:fmt:check && pnpm contracts:test && pnpm typecheck && pnpm test"
   }
 }
