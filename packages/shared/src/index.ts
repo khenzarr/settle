@@ -1,0 +1,1 @@
+export const SETTLE_NAME = "Settle";

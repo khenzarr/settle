@@ -1,0 +1,16 @@
+{
+  "name": "settle",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@11.20.0",
+  "scripts": {
+    "lint": "pnpm --recursive --if-present lint",
+    "typecheck": "pnpm --recursive --if-present typecheck",
+    "test": "pnpm --recursive --if-present test",
+    "build:web": "pnpm --filter @settle/web build",
+    "contracts:fmt:check": "forge fmt --check --root packages/contracts",
+    "contracts:test": "forge test --root packages/contracts",
+    "validate": "pnpm contracts:fmt:check && pnpm contracts:test && pnpm typecheck"
+  }
+}
