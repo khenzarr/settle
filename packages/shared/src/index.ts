@@ -1,6 +1,11 @@
 export const SETTLE_NAME = "Settle";
 
+export { ARC_TESTNET, ARC_TESTNET_ENVIRONMENT } from "./chains.ts";
+export type { ArcTestnetMetadata } from "./chains.ts";
 export { BASIS_POINTS_TOTAL, MAX_SETTLEMENT_RECIPIENTS, USDC_DECIMALS } from "./constants.ts";
+export { ARC_TESTNET_RPC_URL_ENV, NEXT_PUBLIC_ARC_TESTNET_RPC_URL_ENV, NEXT_PUBLIC_SETTLEMENT_CONTRACT_ADDRESS_ENV, parseArcTestnetRpcUrl, parseSettlementContractAddress } from "./environment.ts";
+export type { EnvironmentValues } from "./environment.ts";
+export { getExplorerAddressUrl, getExplorerBlockUrl, getExplorerTokenUrl, getExplorerTransactionUrl } from "./explorer.ts";
 export { formatUsdcAmount, formatUsdcAmountFixed, parseUsdcAmount, parseUsdcAmountAllowZero } from "./money.ts";
 export { DisputeResolution, OrderStatus, blockchainTimestampSchema, hasActiveEscrowObligation, isTerminalOrderStatus, orderCreationInputSchema, orderLifecycleTimestampsSchema, orderStatusLabel, orderSummarySchema, parseOrderStatus, storedOnchainOrderSchema, validateOrderCreationAt } from "./order.ts";
 export type { DisputeResolution as DisputeResolutionValue, OrderCreationInput, OrderLifecycleTimestamps, OrderStatus as OrderStatusValue, OrderSummary, StoredOnchainOrder } from "./order.ts";

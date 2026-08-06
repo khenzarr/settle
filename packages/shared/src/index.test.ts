@@ -2,10 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  SETTLE_NAME, DisputeResolution, OrderStatus, calculateSettlementPayouts, evmAddressSchema, formatUsdcAmount,
+  ARC_TESTNET, ARC_TESTNET_RPC_URL_ENV, NEXT_PUBLIC_ARC_TESTNET_RPC_URL_ENV,
+  NEXT_PUBLIC_SETTLEMENT_CONTRACT_ADDRESS_ENV, SETTLE_NAME, DisputeResolution, OrderStatus,
+  calculateSettlementPayouts, evmAddressSchema, formatUsdcAmount,
   formatUsdcAmountFixed, hasActiveEscrowObligation, isTerminalOrderStatus,
-  normalizeAddress, orderCreationInputSchema, orderIdSchema, orderStatusLabel,
-  parseOrderStatus, parseUsdcAmount, parseUsdcAmountAllowZero, termsHashSchema, transactionHashSchema,
+  getExplorerAddressUrl, getExplorerBlockUrl, getExplorerTokenUrl, getExplorerTransactionUrl,
+  normalizeAddress, orderCreationInputSchema, orderIdSchema, orderStatusLabel, parseArcTestnetRpcUrl,
+  parseOrderStatus, parseSettlementContractAddress, parseUsdcAmount, parseUsdcAmountAllowZero,
+  termsHashSchema, transactionHashSchema,
   storedOnchainOrderSchema, validateOrderCreationAt, validateSettlementSplits,
 } from "./index.ts";
 
@@ -13,9 +17,89 @@ const ADDRESS_A = "0x0000000000000000000000000000000000000001";
 const ADDRESS_B = "0x0000000000000000000000000000000000000002";
 const ORDER_ID = `0x${"1".repeat(64)}`;
 const TERMS_HASH = `0x${"2".repeat(64)}`;
+const TRANSACTION_HASH = `0x${"a".repeat(64)}`;
 
 test("exports the project name", () => {
   assert.equal(SETTLE_NAME, "Settle");
+});
+
+test("configures the Arc Testnet chain ID", () => {
+  assert.equal(ARC_TESTNET.chainId, 5_042_002);
+});
+
+test("uses the official Arc Testnet RPC as the fallback", () => {
+  assert.equal(parseArcTestnetRpcUrl({}), "https://rpc.testnet.arc.network");
+});
+
+test("accepts an Arc Testnet RPC override", () => {
+  assert.equal(parseArcTestnetRpcUrl({ [ARC_TESTNET_RPC_URL_ENV]: "https://arc-rpc.example.test/path" }), "https://arc-rpc.example.test/path");
+  assert.equal(parseArcTestnetRpcUrl({ [NEXT_PUBLIC_ARC_TESTNET_RPC_URL_ENV]: "http://localhost:8545" }), "http://localhost:8545");
+});
+
+test("treats an empty Arc Testnet RPC override as absent", () => {
+  assert.equal(parseArcTestnetRpcUrl({ [ARC_TESTNET_RPC_URL_ENV]: "  " }), ARC_TESTNET.rpcUrl);
+});
+
+test("rejects a malformed Arc Testnet RPC override", () => {
+  assert.throws(() => parseArcTestnetRpcUrl({ [ARC_TESTNET_RPC_URL_ENV]: "not-a-url" }));
+  assert.throws(() => parseArcTestnetRpcUrl({ [ARC_TESTNET_RPC_URL_ENV]: "ws://rpc.example.test" }));
+});
+
+test("configures the official Arc Testnet USDC ERC-20 address", () => {
+  assert.equal(ARC_TESTNET.usdc.address, `0x36${"0".repeat(38)}`);
+});
+
+test("keeps native and ERC-20 USDC decimal values distinct", () => {
+  assert.equal(ARC_TESTNET.nativeCurrency.decimals, 18);
+  assert.equal(ARC_TESTNET.usdc.decimals, 6);
+  assert.notEqual(ARC_TESTNET.nativeCurrency.decimals, ARC_TESTNET.usdc.decimals);
+});
+
+test("builds the Arcscan transaction URL", () => {
+  assert.equal(getExplorerTransactionUrl(TRANSACTION_HASH), `${ARC_TESTNET.explorerBaseUrl}/tx/${TRANSACTION_HASH}`);
+});
+
+test("builds the Arcscan address URL", () => {
+  assert.equal(getExplorerAddressUrl(ADDRESS_A), `${ARC_TESTNET.explorerBaseUrl}/address/${ADDRESS_A}`);
+});
+
+test("builds the Arcscan block URL without floating-point conversion", () => {
+  const blockNumber = 9_007_199_254_740_993n;
+  assert.equal(getExplorerBlockUrl(blockNumber), `${ARC_TESTNET.explorerBaseUrl}/block/9007199254740993`);
+});
+
+test("builds the Arcscan token URL", () => {
+  assert.equal(getExplorerTokenUrl(ARC_TESTNET.usdc.address), `${ARC_TESTNET.explorerBaseUrl}/token/${ARC_TESTNET.usdc.address}`);
+});
+
+test("rejects a malformed explorer transaction hash", () => {
+  assert.throws(() => getExplorerTransactionUrl("0x1234"));
+});
+
+test("rejects malformed explorer addresses", () => {
+  assert.throws(() => getExplorerAddressUrl("0x1234"));
+  assert.throws(() => getExplorerTokenUrl("not-an-address"));
+});
+
+test("rejects a negative explorer block number", () => {
+  assert.throws(() => getExplorerBlockUrl(-1n), RangeError);
+});
+
+test("allows a missing settlement contract address before deployment", () => {
+  assert.equal(parseSettlementContractAddress({}), undefined);
+  assert.equal(parseSettlementContractAddress({ [NEXT_PUBLIC_SETTLEMENT_CONTRACT_ADDRESS_ENV]: " " }), undefined);
+});
+
+test("accepts a valid settlement contract address", () => {
+  assert.equal(parseSettlementContractAddress({ [NEXT_PUBLIC_SETTLEMENT_CONTRACT_ADDRESS_ENV]: ADDRESS_A }), ADDRESS_A);
+});
+
+test("rejects a zero settlement contract address", () => {
+  assert.throws(() => parseSettlementContractAddress({ [NEXT_PUBLIC_SETTLEMENT_CONTRACT_ADDRESS_ENV]: `0x${"0".repeat(40)}` }));
+});
+
+test("rejects a malformed settlement contract address", () => {
+  assert.throws(() => parseSettlementContractAddress({ [NEXT_PUBLIC_SETTLEMENT_CONTRACT_ADDRESS_ENV]: "0x1234" }));
 });
 
 test("parses exact USDC examples and six-decimal boundary", () => {
