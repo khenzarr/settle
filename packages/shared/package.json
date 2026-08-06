@@ -9,6 +9,9 @@
     "typecheck": "tsc --noEmit",
     "test": "node --test src/index.test.ts"
   },
+  "dependencies": {
+    "zod": "4.4.3"
+  },
   "devDependencies": {
     "@types/node": "26.1.2",
     "typescript": "^5.9.0"
