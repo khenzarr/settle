@@ -9,8 +9,11 @@
     "typecheck": "pnpm --recursive --if-present typecheck",
     "test": "pnpm --recursive --if-present test",
     "build:web": "pnpm --filter @settle/web build",
+    "contracts:build": "forge build --root packages/contracts",
+    "contracts:abi": "pnpm contracts:build && node packages/contracts/scripts/export-settlement-abi.mjs",
+    "contracts:abi:check": "pnpm contracts:build && node packages/contracts/scripts/export-settlement-abi.mjs --check",
     "contracts:fmt:check": "forge fmt --check --root packages/contracts",
     "contracts:test": "forge test --root packages/contracts",
-    "validate": "pnpm contracts:fmt:check && pnpm contracts:test && pnpm typecheck"
+    "validate": "pnpm contracts:abi:check && pnpm contracts:fmt:check && pnpm contracts:test && pnpm typecheck"
   }
 }

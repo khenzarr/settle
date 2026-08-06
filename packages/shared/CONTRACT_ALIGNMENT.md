@@ -8,4 +8,4 @@
 - EVM addresses accept lowercase or checksummed-looking hexadecimal input. Lowercase normalization is used for comparison; this package does not fabricate checksums.
 - `StoredOnchainOrder` maps to `SettlementEscrow.Order`: `buyer`, `totalAmount`, `fundingDeadline`, `settlementDeadline`, `termsHash`, `createdAt`, `fundedAt`, `disputedAt`, `settledAt`, `refundedAt`, `cancelledAt`, and `status`. Settlement splits map to the separately stored recipient and `uint16` share arrays.
 
-This package is maintained as a domain model and is not generated automatically from the ABI.
+The domain types in this package are maintained manually and kept aligned with Solidity. The `SettlementEscrow` contract ABI is generated separately from the Foundry artifact into `src/abi/SettlementEscrow.ts` and exported through the package's public API. The ABI pipeline exports only the ABI; it does not export Foundry metadata or bytecode.

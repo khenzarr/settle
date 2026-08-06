@@ -1,5 +1,6 @@
 export const SETTLE_NAME = "Settle";
 
+export { settlementEscrowAbi } from "./abi/SettlementEscrow.ts";
 export { ARC_TESTNET, ARC_TESTNET_ENVIRONMENT } from "./chains.ts";
 export type { ArcTestnetMetadata } from "./chains.ts";
 export { BASIS_POINTS_TOTAL, MAX_SETTLEMENT_RECIPIENTS, USDC_DECIMALS } from "./constants.ts";
