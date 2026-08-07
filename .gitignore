@@ -21,6 +21,8 @@ broadcast/
 **/broadcast/
 lib/
 **/lib/
+!apps/web/lib/
+!apps/web/lib/**
 
 *.log
 *.key

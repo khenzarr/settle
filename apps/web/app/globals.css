@@ -1,6 +1,6 @@
 :root {
-  color: #171717;
-  background: #ffffff;
+  color: #e8edf7;
+  background: #0b1020;
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -13,7 +13,7 @@ body {
 }
 
 main {
-  max-width: 48rem;
+  max-width: 52rem;
   margin: 0 auto;
   padding: 4rem 1.5rem;
 }
@@ -28,3 +28,16 @@ p {
   margin: 0;
   line-height: 1.5;
 }
+
+.eyebrow { color: #7dd3fc; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; }
+section { margin-top: 2rem; padding: 1.5rem; border: 1px solid #28344f; border-radius: .75rem; background: #121a2e; }
+h2 { margin-top: 0; }
+button { margin-top: 1rem; padding: .75rem 1rem; border: 0; border-radius: .4rem; background: #38bdf8; color: #07111f; font-weight: 700; cursor: pointer; }
+button.secondary { background: #cbd5e1; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+dl { display: grid; grid-template-columns: 6rem 1fr; gap: .5rem; }
+dt { color: #94a3b8; } dd { margin: 0; overflow-wrap: anywhere; }
+label { display: block; margin-bottom: .5rem; }
+textarea { width: 100%; min-height: 13rem; padding: .75rem; color: inherit; background: #080d19; border: 1px solid #3b4966; border-radius: .4rem; font: .85rem monospace; }
+.preview { display: grid; gap: .5rem; margin: 1rem 0; } code, a { color: #7dd3fc; overflow-wrap: anywhere; }
+.error { margin-top: 1rem; color: #fda4af; }
