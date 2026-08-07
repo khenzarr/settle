@@ -4,7 +4,7 @@
 
 Settle uses Circle Developer-Controlled Wallets as the planned custody boundary for the Arc Testnet settlement deployment and initial operator activity. This foundation is server-only and does not place Circle credentials, entity-secret material, or signing material in browser code.
 
-No Circle wallet creation and no Circle contract deployment has been executed by this integration as of this change. The default commands are read-only configuration checks, dry-run plans, and local artifact preparation. A wallet mutation is possible only through the separately named command with an explicit `--execute` flag. Contract submission is not implemented.
+The configured Arc Testnet EOA predates this change. No wallet or wallet set was created and no Circle contract deployment was submitted during this coding task. Contract deployment now remains a dry-run unless the operator supplies both `--execute` and a caller-generated UUIDv4 idempotency key.
 
 ## Why the first wallet is an Arc Testnet EOA
 
@@ -24,6 +24,9 @@ CIRCLE_ENTITY_SECRET=
 CIRCLE_WALLET_SET_ID=
 CIRCLE_DEPLOYER_WALLET_ID=
 CIRCLE_DEPLOYER_ADDRESS=
+CIRCLE_SETTLEMENT_CONTRACT_ID=
+CIRCLE_DEPLOYMENT_TRANSACTION_ID=
+SETTLEMENT_CONTRACT_ADDRESS=
 ```
 
 Empty and whitespace-only values are missing. `CIRCLE_API_KEY` and `CIRCLE_ENTITY_SECRET` must never use a `NEXT_PUBLIC_` prefix. Scripts never print those values, never print the complete environment, and never write credentials to disk. Error normalization retains only a safe operation name, HTTP status, Circle error code, and request ID.
@@ -51,11 +54,11 @@ pnpm circle:wallet:create -- --execute \
 
 Provide only the idempotency key for each resource that is absent. The command may create or reuse one wallet set and one Arc Testnet EOA. It prints only wallet set ID, wallet ID, wallet address, blockchain, and account type, followed by the environment variable names to update. It does not update `.env`.
 
-## Circle Contracts deployment plan
+## Circle Contracts deployment workflow
 
 `pnpm circle:contract:prepare` first runs the existing Foundry ABI freshness check. It then reads `packages/contracts/out/SettlementEscrow.sol/SettlementEscrow.json`, requires a non-empty ABI and non-empty creation bytecode, validates the deployer and all four role addresses, and creates an in-memory Circle Contracts preparation model. It does not call a Circle deployment endpoint and does not contain private signing material.
 
-The exact Solidity constructor parameter order is:
+The canonical request derives its constructor signature from the generated ABI and uses this exact parameter order:
 
 1. Official Arc Testnet USDC: `0x3600000000000000000000000000000000000000`
 2. Administrator address (`SETTLE_ADMIN_ADDRESS`)
@@ -63,7 +66,21 @@ The exact Solidity constructor parameter order is:
 4. Arbitrator address (`SETTLE_ARBITRATOR_ADDRESS`)
 5. Pauser address (`SETTLE_PAUSER_ADDRESS`)
 
-The printed summary contains the contract name, blockchain, deployer wallet ID and address, bytecode length, ABI entry count, four role addresses, and official USDC address. It never prints full bytecode or the complete ABI.
+Before estimate or submission, Circle's `getWallet` operation must return the configured wallet ID and address, `ARC-TESTNET`, and `EOA`. Developer custody and `LIVE` state are also required when those fields are exposed.
+
+`pnpm circle:contract:estimate` performs that preflight and then makes only Circle's non-mutating deployment-fee estimate request. It prints available medium-fee fields without ABI, bytecode, credentials, or a complete SDK response.
+
+`pnpm circle:contract:deploy` prints a publication-safe plan by default and does not initialize Circle clients. Submission requires:
+
+```sh
+pnpm circle:contract:deploy -- --execute --idempotency-key <uuid-v4>
+```
+
+Generate the key outside the repository. If the response is ambiguous, reuse exactly the same key; never retry with a new key. Record the returned IDs under `CIRCLE_SETTLEMENT_CONTRACT_ID` and `CIRCLE_DEPLOYMENT_TRANSACTION_ID`; the command never edits `.env`.
+
+Retrieve both records with `pnpm circle:contract:status`, optionally adding `-- --wait`. CLI `--contract-id` and `--transaction-id` values override environment values. Wait defaults to 5 seconds for 600 seconds, never polls faster than two seconds, prints only changes, succeeds only on transaction `COMPLETE`, and fails immediately on `CANCELLED`, `DENIED`, `FAILED`, or `STUCK`.
+
+After `COMPLETE` and an available address, status checks Arc RPC chain ID `5042002` and requires non-empty `eth_getCode`, then prints ArcScan links. Put the verified address in `SETTLEMENT_CONTRACT_ADDRESS` manually and run `pnpm contracts:deployment:verify` for roles and initial state.
 
 ## Independent Foundry verification path
 
@@ -75,5 +92,8 @@ Foundry remains an independent simulation and fallback path. `pnpm contracts:dep
 - `pnpm circle:wallet:plan` — prints a dry-run reuse/create plan without SDK initialization.
 - `pnpm circle:wallet:create` — remains a dry run unless `-- --execute` is supplied.
 - `pnpm circle:contract:prepare` — builds/checks the artifact and prints a publication-safe preparation summary without submission.
+- `pnpm circle:contract:estimate` — performs wallet preflight and a non-mutating Circle fee estimate.
+- `pnpm circle:contract:deploy` — prints a dry-run plan; mutates only with explicit execution safeguards.
+- `pnpm circle:contract:status` — retrieves Circle contract and transaction state; `--wait` optionally polls.
 
 Live Circle mutations are not part of `pnpm validate`.

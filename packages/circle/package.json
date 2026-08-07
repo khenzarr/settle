@@ -17,6 +17,9 @@
     "wallet:plan": "node --env-file-if-exists=../../.env scripts/create-deployer-wallet.ts",
     "wallet:create": "node --env-file-if-exists=../../.env scripts/create-deployer-wallet.ts",
     "contract:prepare": "node --env-file-if-exists=../../.env scripts/prepare-contract-deployment.ts",
+    "contract:estimate": "node --env-file-if-exists=../../.env scripts/estimate-contract-deployment.ts",
+    "contract:deploy": "node --env-file-if-exists=../../.env scripts/deploy-contract.ts",
+    "contract:status": "node --env-file-if-exists=../../.env scripts/check-contract-deployment.ts",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test": "node --test src/*.test.ts"

@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { ARC_TESTNET } from "@settle/shared";
+import { ARC_TESTNET, settlementEscrowAbi } from "@settle/shared";
 import type { EvmAddress } from "@settle/shared";
 import type { CircleDeploymentConfig } from "./config.ts";
 
@@ -17,7 +17,19 @@ export interface CircleContractDeploymentPreparation {
   readonly deployerAddress: EvmAddress;
   readonly abi: readonly unknown[];
   readonly bytecode: string;
+  readonly constructorSignature: string;
   readonly constructorParameters: readonly [EvmAddress, EvmAddress, EvmAddress, EvmAddress, EvmAddress];
+}
+
+export interface CanonicalCircleDeploymentRequest {
+  readonly name: typeof SETTLEMENT_ESCROW_CONTRACT_NAME;
+  readonly description: string;
+  readonly blockchain: "ARC-TESTNET";
+  readonly walletId: string;
+  readonly abiJson: string;
+  readonly bytecode: string;
+  readonly constructorParameters: readonly [EvmAddress, EvmAddress, EvmAddress, EvmAddress, EvmAddress];
+  readonly fee: Readonly<{ type: "level"; config: Readonly<{ feeLevel: "MEDIUM" }> }>;
 }
 
 export interface PublicationSafeDeploymentSummary {
@@ -50,6 +62,8 @@ export async function prepareSettlementEscrowDeployment(
     throw new TypeError("SettlementEscrow artifact must contain a non-empty ABI array");
   }
   const bytecode = readBytecode(artifact.bytecode);
+  assertGeneratedAbiCurrent(artifact.abi);
+  const constructorSignature = deriveConstructorSignature(artifact.abi);
   const officialUsdcAddress = ARC_TESTNET.usdc.address;
 
   return {
@@ -59,6 +73,7 @@ export async function prepareSettlementEscrowDeployment(
     deployerAddress: config.deployerAddress,
     abi: artifact.abi,
     bytecode,
+    constructorSignature,
     constructorParameters: [
       officialUsdcAddress,
       config.administratorAddress,
@@ -67,6 +82,29 @@ export async function prepareSettlementEscrowDeployment(
       config.pauserAddress,
     ],
   };
+}
+
+export function createCanonicalDeploymentRequest(preparation: CircleContractDeploymentPreparation): CanonicalCircleDeploymentRequest {
+  return {
+    name: preparation.contractName,
+    description: "Settle escrow for USDC settlement, role controls, disputes, and refunds on Arc Testnet.",
+    blockchain: preparation.blockchain,
+    walletId: preparation.deployerWalletId,
+    abiJson: JSON.stringify(preparation.abi),
+    bytecode: preparation.bytecode,
+    constructorParameters: preparation.constructorParameters,
+    fee: { type: "level", config: { feeLevel: "MEDIUM" } },
+  };
+}
+
+export function deriveConstructorSignature(abi: readonly unknown[]): string {
+  const constructors = abi.filter(isRecord).filter((entry) => entry.type === "constructor");
+  if (constructors.length !== 1) throw new TypeError("SettlementEscrow ABI must contain exactly one constructor");
+  const inputs = constructors[0]?.["inputs"];
+  if (!Array.isArray(inputs) || inputs.length !== 5) throw new TypeError("SettlementEscrow constructor must contain exactly five inputs");
+  const types = inputs.map((input) => isRecord(input) && typeof input.type === "string" ? input.type : undefined);
+  if (types.some((type) => type !== "address")) throw new TypeError("SettlementEscrow constructor inputs must be five addresses");
+  return `constructor(${types.join(",")})`;
 }
 
 export function createPublicationSafeDeploymentSummary(
@@ -113,6 +151,16 @@ function readBytecode(value: unknown): string {
     throw new TypeError("SettlementEscrow deployment bytecode must be non-empty hexadecimal bytecode");
   }
   return bytecode;
+}
+
+function assertGeneratedAbiCurrent(artifactAbi: readonly unknown[]): void {
+  if (JSON.stringify(artifactAbi) !== JSON.stringify(settlementEscrowAbi)) {
+    throw new TypeError("Generated shared SettlementEscrow ABI is stale. Run pnpm contracts:abi first.");
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object";
 }
 
 function isNodeError(error: unknown): error is NodeJS.ErrnoException {

@@ -40,6 +40,12 @@ export interface CircleDeploymentConfig {
   readonly pauserAddress: EvmAddress;
 }
 
+export interface CircleDeploymentReferences {
+  readonly contractId?: string;
+  readonly transactionId?: string;
+  readonly settlementContractAddress?: EvmAddress;
+}
+
 export class CircleConfigError extends Error {
   readonly missingFields: readonly string[];
 
@@ -51,6 +57,7 @@ export class CircleConfigError extends Error {
 }
 
 const nonEmptyStringSchema = z.string().trim().min(1);
+const uuidSchema = z.string().uuid();
 
 export function readNonEmptyEnvironmentValue(values: EnvironmentValues, name: string): string | undefined {
   const value = values[name]?.trim();
@@ -119,6 +126,23 @@ export function parseCircleDeploymentConfig(values: EnvironmentValues): CircleDe
     arbitratorAddress: parseAddress(parsed.SETTLE_ARBITRATOR_ADDRESS),
     pauserAddress: parseAddress(parsed.SETTLE_PAUSER_ADDRESS),
   };
+}
+
+export function parseCircleDeploymentReferences(values: EnvironmentValues): CircleDeploymentReferences {
+  const contractId = readNonEmptyEnvironmentValue(values, "CIRCLE_SETTLEMENT_CONTRACT_ID");
+  const transactionId = readNonEmptyEnvironmentValue(values, "CIRCLE_DEPLOYMENT_TRANSACTION_ID");
+  const settlementContractAddress = readNonEmptyEnvironmentValue(values, "SETTLEMENT_CONTRACT_ADDRESS");
+  return {
+    ...(contractId === undefined ? {} : { contractId: uuidSchema.parse(contractId) }),
+    ...(transactionId === undefined ? {} : { transactionId: uuidSchema.parse(transactionId) }),
+    ...(settlementContractAddress === undefined ? {} : { settlementContractAddress: parseAddress(settlementContractAddress) }),
+  };
+}
+
+export function parseUuidV4(value: string, label: string): string {
+  const parsed = uuidSchema.parse(value);
+  if (parsed[14]?.toLowerCase() !== "4") throw new TypeError(`${label} must be a UUIDv4`);
+  return parsed;
 }
 
 function parseAddress(value: string | undefined): EvmAddress {

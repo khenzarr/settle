@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { CircleWalletGateway, CircleWalletRecord } from "./wallets.ts";
-import { executeDeployerWalletPlan, planDeployerWallet, validateArcTestnetWallet } from "./wallets.ts";
+import { executeDeployerWalletPlan, planDeployerWallet, preflightDeployerWallet, validateArcTestnetWallet } from "./wallets.ts";
 
 const validWallet: CircleWalletRecord = {
   id: "wallet-id",
@@ -72,6 +72,23 @@ test("existing wallet-set execution creates only the missing wallet", async () =
     walletIdempotencyKey: "wallet-key",
   });
   assert.deepEqual(calls, ["createWallet:wallet-set-id:wallet-key"]);
+});
+
+test("wallet preflight accepts matching live developer-controlled metadata", async () => {
+  const gateway = fakeGateway([]);
+  const result = await preflightDeployerWallet({ gateway: { ...gateway, async getWallet() { return { ...validWallet, custodyType: "DEVELOPER", state: "LIVE" }; } }, configuredWalletId: validWallet.id, configuredAddress: validWallet.address as `0x${string}` });
+  assert.equal(result.state, "LIVE");
+});
+
+test("wallet preflight rejects ID and address mismatches", async () => {
+  await assert.rejects(() => preflightDeployerWallet({ gateway: fakeGateway([]), configuredWalletId: "other", configuredAddress: validWallet.address as `0x${string}` }), /wallet ID/);
+  await assert.rejects(() => preflightDeployerWallet({ gateway: fakeGateway([]), configuredWalletId: validWallet.id, configuredAddress: "0x2222222222222222222222222222222222222222" }), /wallet address/);
+});
+
+test("wallet validation rejects wrong account type and non-live state", async () => {
+  assert.throws(() => validateArcTestnetWallet({ ...validWallet, accountType: "SCA" }), /EOA/);
+  const gateway = { ...fakeGateway([]), async getWallet() { return { ...validWallet, state: "FROZEN" }; } };
+  await assert.rejects(() => preflightDeployerWallet({ gateway, configuredWalletId: validWallet.id, configuredAddress: validWallet.address as `0x${string}` }), /LIVE/);
 });
 
 function fakeGateway(calls: string[]): CircleWalletGateway {

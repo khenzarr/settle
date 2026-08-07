@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import type { CircleDeploymentConfig } from "./config.ts";
-import { createPublicationSafeDeploymentSummary, prepareSettlementEscrowDeployment } from "./contracts.ts";
+import { createCanonicalDeploymentRequest, createPublicationSafeDeploymentSummary, deriveConstructorSignature, prepareSettlementEscrowDeployment } from "./contracts.ts";
 
 const config: CircleDeploymentConfig = {
   deployerWalletId: "wallet-id",
@@ -16,8 +16,7 @@ const config: CircleDeploymentConfig = {
 };
 
 test("constructor parameter order exactly matches Solidity", async () => {
-  await withArtifact({ abi: [{ type: "constructor" }], bytecode: { object: "0x60016000" } }, async (path) => {
-    const preparation = await prepareSettlementEscrowDeployment(config, path);
+    const preparation = await prepareSettlementEscrowDeployment(config);
     assert.deepEqual(preparation.constructorParameters, [
       "0x3600000000000000000000000000000000000000",
       config.administratorAddress,
@@ -25,7 +24,24 @@ test("constructor parameter order exactly matches Solidity", async () => {
       config.arbitratorAddress,
       config.pauserAddress,
     ]);
-  });
+});
+
+test("constructor signature is derived from ABI input types", async () => {
+  const preparation = await prepareSettlementEscrowDeployment(config);
+  assert.equal(preparation.constructorSignature, "constructor(address,address,address,address,address)");
+  assert.equal(deriveConstructorSignature(preparation.abi), preparation.constructorSignature);
+});
+
+test("canonical deployment request contains the exact SDK payload", async () => {
+  const preparation = await prepareSettlementEscrowDeployment(config);
+  const request = createCanonicalDeploymentRequest(preparation);
+  assert.equal(request.name, "SettlementEscrow");
+  assert.equal(request.blockchain, "ARC-TESTNET");
+  assert.equal(request.walletId, config.deployerWalletId);
+  assert.deepEqual(request.constructorParameters, preparation.constructorParameters);
+  assert.deepEqual(request.fee, { type: "level", config: { feeLevel: "MEDIUM" } });
+  assert.deepEqual(JSON.parse(request.abiJson), preparation.abi);
+  assert.match(request.bytecode, /^0x[0-9a-f]+$/i);
 });
 
 test("missing artifact is rejected", async () => {
@@ -39,10 +55,9 @@ test("empty bytecode is rejected", async () => {
 });
 
 test("deployment summary is publication safe", async () => {
-  await withArtifact({ abi: [{ type: "constructor" }, { type: "function" }], bytecode: { object: "0x60016000" } }, async (path) => {
-    const summary = createPublicationSafeDeploymentSummary(await prepareSettlementEscrowDeployment(config, path));
-    assert.equal(summary.bytecodeLength, 4);
-    assert.equal(summary.abiEntryCount, 2);
+    const summary = createPublicationSafeDeploymentSummary(await prepareSettlementEscrowDeployment(config));
+    assert.equal(summary.bytecodeLength, 16359);
+    assert.equal(summary.abiEntryCount, 70);
     assert.equal("bytecode" in summary, false);
     assert.equal("abi" in summary, false);
     assert.deepEqual(Object.keys(summary), [
@@ -55,7 +70,6 @@ test("deployment summary is publication safe", async () => {
       "officialUsdcAddress",
       "constructorRoles",
     ]);
-  });
 });
 
 async function withArtifact(value: unknown, action: (path: string) => Promise<void>): Promise<void> {

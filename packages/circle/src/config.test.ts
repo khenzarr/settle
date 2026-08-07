@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { CircleConfigError, findPublicCircleCredentialNames, getCircleConfigPresence, parseCircleClientConfig, parseCircleDeploymentConfig, parseCircleWalletReferences } from "./config.ts";
+import { CircleConfigError, findPublicCircleCredentialNames, getCircleConfigPresence, parseCircleClientConfig, parseCircleDeploymentConfig, parseCircleDeploymentReferences, parseCircleWalletReferences, parseUuidV4 } from "./config.ts";
 
 test("environment validation accepts complete server credentials", () => {
   assert.deepEqual(parseCircleClientConfig({ CIRCLE_API_KEY: " api-key ", CIRCLE_ENTITY_SECRET: " entity-secret " }), {
@@ -47,4 +47,24 @@ test("deployment configuration validates and normalizes all constructor addresse
   });
   assert.equal(config.deployerWalletId, "wallet-id");
   assert.equal(config.pauserAddress, "0x5555555555555555555555555555555555555555");
+});
+
+test("optional deployment references treat empty values as absent", () => {
+  assert.deepEqual(parseCircleDeploymentReferences({ CIRCLE_SETTLEMENT_CONTRACT_ID: " ", CIRCLE_DEPLOYMENT_TRANSACTION_ID: "" }), {});
+});
+
+test("optional deployment references validate UUIDs and the settlement address", () => {
+  assert.deepEqual(parseCircleDeploymentReferences({
+    CIRCLE_SETTLEMENT_CONTRACT_ID: "11111111-1111-4111-8111-111111111111",
+    CIRCLE_DEPLOYMENT_TRANSACTION_ID: "22222222-2222-4222-8222-222222222222",
+    SETTLEMENT_CONTRACT_ADDRESS: "0x1111111111111111111111111111111111111111",
+  }).contractId, "11111111-1111-4111-8111-111111111111");
+  assert.throws(() => parseCircleDeploymentReferences({ CIRCLE_SETTLEMENT_CONTRACT_ID: "bad" }));
+  assert.throws(() => parseCircleDeploymentReferences({ SETTLEMENT_CONTRACT_ADDRESS: `0x${"0".repeat(40)}` }));
+});
+
+test("execution idempotency keys must be UUIDv4", () => {
+  assert.equal(parseUuidV4("11111111-1111-4111-8111-111111111111", "key"), "11111111-1111-4111-8111-111111111111");
+  assert.throws(() => parseUuidV4("bad", "key"));
+  assert.throws(() => parseUuidV4("11111111-1111-5111-8111-111111111111", "key"), /UUIDv4/);
 });

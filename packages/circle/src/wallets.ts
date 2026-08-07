@@ -12,6 +12,8 @@ export interface PublicationSafeWalletMetadata {
   readonly address: EvmAddress;
   readonly blockchain: typeof CIRCLE_ARC_TESTNET_BLOCKCHAIN;
   readonly accountType: typeof CIRCLE_DEPLOYER_ACCOUNT_TYPE;
+  readonly custodyType?: string;
+  readonly state?: string;
 }
 
 export interface CircleWalletRecord {
@@ -20,6 +22,22 @@ export interface CircleWalletRecord {
   readonly address: string;
   readonly blockchain: string;
   readonly accountType?: string;
+  readonly custodyType?: string;
+  readonly state?: string;
+}
+
+export async function preflightDeployerWallet(input: Readonly<{
+  gateway: CircleWalletGateway;
+  configuredWalletId: string;
+  configuredAddress: EvmAddress;
+}>): Promise<PublicationSafeWalletMetadata> {
+  const wallet = await input.gateway.getWallet(input.configuredWalletId);
+  if (wallet.id !== input.configuredWalletId) throw new TypeError("Circle wallet ID does not match configured deployer wallet ID");
+  const metadata = validateArcTestnetWallet(wallet);
+  if (metadata.address !== normalizeAddress(input.configuredAddress)) throw new TypeError("Circle wallet address does not match configured deployer address");
+  if (wallet.custodyType !== undefined && wallet.custodyType !== "DEVELOPER") throw new TypeError("Expected developer-controlled wallet custody type");
+  if (wallet.state !== undefined && wallet.state !== "LIVE") throw new TypeError("Expected Circle deployer wallet state LIVE");
+  return metadata;
 }
 
 export interface CircleWalletGateway {
@@ -94,6 +112,8 @@ export function validateArcTestnetWallet(wallet: CircleWalletRecord): Publicatio
     address: normalizeAddress(address),
     blockchain: CIRCLE_ARC_TESTNET_BLOCKCHAIN,
     accountType: CIRCLE_DEPLOYER_ACCOUNT_TYPE,
+    ...(wallet.custodyType === undefined ? {} : { custodyType: wallet.custodyType }),
+    ...(wallet.state === undefined ? {} : { state: wallet.state }),
   };
 }
 
@@ -155,6 +175,8 @@ function toWalletRecord(wallet: Readonly<{
   address: string;
   blockchain: string;
   accountType?: string;
+  custodyType?: string;
+  state?: string;
 }>): CircleWalletRecord {
   return {
     id: wallet.id,
@@ -162,5 +184,7 @@ function toWalletRecord(wallet: Readonly<{
     address: wallet.address,
     blockchain: wallet.blockchain,
     accountType: wallet.accountType,
+    custodyType: wallet.custodyType,
+    state: wallet.state,
   };
 }
