@@ -1,7 +1,7 @@
 export { createCircleContractsClient, createDeveloperControlledWalletsClient } from "./client.ts";
 export { CIRCLE_CREDENTIAL_ENV_NAMES, CIRCLE_ENV_NAMES, CIRCLE_ROLE_ENV_NAMES, CircleConfigError, findPublicCircleCredentialNames, getCircleConfigPresence, parseCircleClientConfig, parseCircleDeploymentConfig, parseCircleDeploymentReferences, parseCircleWalletReferences, parseUuidV4, readNonEmptyEnvironmentValue } from "./config.ts";
 export type { CircleClientConfig, CircleDeploymentConfig, CircleDeploymentReferences, CircleEnvironmentName, CircleWalletReferences, EnvironmentValues } from "./config.ts";
-export { SETTLEMENT_ESCROW_ARTIFACT_PATH, SETTLEMENT_ESCROW_CONTRACT_NAME, createCanonicalDeploymentRequest, createPublicationSafeDeploymentSummary, deriveConstructorSignature, prepareSettlementEscrowDeployment } from "./contracts.ts";
+export { SETTLEMENT_ESCROW_ARTIFACT_PATH, SETTLEMENT_ESCROW_CONTRACT_DESCRIPTION, SETTLEMENT_ESCROW_CONTRACT_NAME, createCanonicalDeploymentRequest, createPublicationSafeDeploymentSummary, deriveConstructorSignature, prepareSettlementEscrowDeployment } from "./contracts.ts";
 export type { CircleContractDeploymentPreparation, PublicationSafeDeploymentSummary } from "./contracts.ts";
 export { estimateDeployment, formatDeploymentPlan, formatDeploymentSubmission, formatSafeFeeEstimate, getContractStatus, getTransactionStatus, parseDeploymentCommandArguments, runDeploymentCommand, submitDeployment } from "./contract-deployment.ts";
 export type { DeploymentSubmissionResult, SafeContractStatus, SafeFeeEstimate, SafeTransactionStatus } from "./contract-deployment.ts";

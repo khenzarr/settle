@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import type { CircleDeploymentConfig } from "./config.ts";
-import { createCanonicalDeploymentRequest, createPublicationSafeDeploymentSummary, deriveConstructorSignature, prepareSettlementEscrowDeployment } from "./contracts.ts";
+import { createCanonicalDeploymentRequest, createPublicationSafeDeploymentSummary, deriveConstructorSignature, prepareSettlementEscrowDeployment, SETTLEMENT_ESCROW_CONTRACT_DESCRIPTION } from "./contracts.ts";
 
 const config: CircleDeploymentConfig = {
   deployerWalletId: "wallet-id",
@@ -36,7 +36,11 @@ test("canonical deployment preparation retains the exact local deployment data",
   const preparation = await prepareSettlementEscrowDeployment(config);
   const request = createCanonicalDeploymentRequest(preparation);
   assert.equal(request.name, "SettlementEscrow");
-  assert.equal(request.description, "Settle escrow for USDC settlement, role controls, disputes, and refunds on Arc Testnet.");
+  assert.equal(preparation.description, "SettleUSDCSettlementArcTestnet");
+  assert.equal(request.description, SETTLEMENT_ESCROW_CONTRACT_DESCRIPTION);
+  assert.match(request.description, /^[A-Za-z0-9]+$/);
+  assert.doesNotMatch(request.description, /\s/);
+  assert.doesNotMatch(request.description, /[^A-Za-z0-9]/);
   assert.equal(request.blockchain, "ARC-TESTNET");
   assert.equal(request.walletId, config.deployerWalletId);
   assert.deepEqual(request.constructorParameters, preparation.constructorParameters);
@@ -49,6 +53,16 @@ test("canonical deployment preparation retains the exact local deployment data",
   assert.ok(Object.hasOwn(request, "abiJson"));
   assert.equal(Object.hasOwn(request, "constructorSignature"), false);
   assert.deepEqual(Object.keys(request), ["name", "description", "blockchain", "walletId", "abiJson", "bytecode", "constructorParameters", "fee"]);
+});
+
+test("preparation enforces the Circle alphanumeric description rule before artifact work", async () => {
+  for (const invalid of ["Settle,USDC", "Settle.USDC", "Settle USDC"]) {
+    await assert.rejects(
+      () => prepareSettlementEscrowDeployment(config, join(tmpdir(), "missing-settle-artifact.json"), invalid),
+      /description must contain only ASCII letters and digits/,
+    );
+  }
+  await assert.doesNotReject(() => prepareSettlementEscrowDeployment(config, undefined, "SettleUSDC123"));
 });
 
 test("missing artifact is rejected", async () => {

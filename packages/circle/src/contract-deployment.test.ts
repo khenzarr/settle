@@ -6,7 +6,7 @@ import { estimateDeployment, formatSafeFeeEstimate, getContractStatus, getTransa
 import type { CircleContractDeploymentPreparation } from "./contracts.ts";
 
 const preparation: CircleContractDeploymentPreparation = {
-  contractName: "SettlementEscrow", blockchain: "ARC-TESTNET", deployerWalletId: "wallet-id", deployerAddress: "0x1111111111111111111111111111111111111111",
+  contractName: "SettlementEscrow", description: "SettleUSDCSettlementArcTestnet", blockchain: "ARC-TESTNET", deployerWalletId: "wallet-id", deployerAddress: "0x1111111111111111111111111111111111111111",
   abi: [{ type: "constructor", inputs: Array.from({ length: 5 }, () => ({ type: "address" })) }], bytecode: "0x6001",
   constructorSignature: "constructor(address,address,address,address,address)", constructorParameters: ["0x3600000000000000000000000000000000000000", "0x2222222222222222222222222222222222222222", "0x3333333333333333333333333333333333333333", "0x4444444444444444444444444444444444444444", "0x5555555555555555555555555555555555555555"],
 };
@@ -84,7 +84,7 @@ test("deploy projects the canonical preparation into the exact wallet-ID and blo
   const client = { async deployContract(input: unknown) { calls++; request = input; return { data: { contractId: "11111111-1111-4111-8111-111111111111", transactionId: "22222222-2222-4222-8222-222222222222" } }; } } as unknown as CircleSmartContractPlatformClient;
   const canonical = {
     name: "SettlementEscrow" as const,
-    description: "Settle escrow deployment test description.",
+    description: "SettleUSDCSettlementArcTestnet",
     blockchain: "ARC-TESTNET" as const,
     walletId: "wallet-id",
     abiJson: JSON.stringify(preparation.abi),

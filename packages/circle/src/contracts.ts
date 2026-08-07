@@ -5,6 +5,7 @@ import type { EvmAddress } from "@settle/shared";
 import type { CircleDeploymentConfig } from "./config.ts";
 
 export const SETTLEMENT_ESCROW_CONTRACT_NAME = "SettlementEscrow" as const;
+export const SETTLEMENT_ESCROW_CONTRACT_DESCRIPTION = "SettleUSDCSettlementArcTestnet" as const;
 export const SETTLEMENT_ESCROW_ARTIFACT_PATH = "packages/contracts/out/SettlementEscrow.sol/SettlementEscrow.json" as const;
 const DEFAULT_SETTLEMENT_ESCROW_ARTIFACT_PATH = fileURLToPath(
   new URL("../../contracts/out/SettlementEscrow.sol/SettlementEscrow.json", import.meta.url),
@@ -12,6 +13,7 @@ const DEFAULT_SETTLEMENT_ESCROW_ARTIFACT_PATH = fileURLToPath(
 
 export interface CircleContractDeploymentPreparation {
   readonly contractName: typeof SETTLEMENT_ESCROW_CONTRACT_NAME;
+  readonly description: string;
   readonly blockchain: "ARC-TESTNET";
   readonly deployerWalletId: string;
   readonly deployerAddress: EvmAddress;
@@ -56,7 +58,9 @@ interface FoundryArtifact {
 export async function prepareSettlementEscrowDeployment(
   config: CircleDeploymentConfig,
   artifactPath: string = DEFAULT_SETTLEMENT_ESCROW_ARTIFACT_PATH,
+  description: string = SETTLEMENT_ESCROW_CONTRACT_DESCRIPTION,
 ): Promise<CircleContractDeploymentPreparation> {
+  assertAlphanumericDescription(description);
   const artifact = await readFoundryArtifact(artifactPath);
   if (!Array.isArray(artifact.abi) || artifact.abi.length === 0) {
     throw new TypeError("SettlementEscrow artifact must contain a non-empty ABI array");
@@ -68,6 +72,7 @@ export async function prepareSettlementEscrowDeployment(
 
   return {
     contractName: SETTLEMENT_ESCROW_CONTRACT_NAME,
+    description,
     blockchain: "ARC-TESTNET",
     deployerWalletId: config.deployerWalletId,
     deployerAddress: config.deployerAddress,
@@ -87,7 +92,7 @@ export async function prepareSettlementEscrowDeployment(
 export function createCanonicalDeploymentRequest(preparation: CircleContractDeploymentPreparation): CanonicalCircleDeploymentRequest {
   return {
     name: preparation.contractName,
-    description: "Settle escrow for USDC settlement, role controls, disputes, and refunds on Arc Testnet.",
+    description: preparation.description,
     blockchain: preparation.blockchain,
     walletId: preparation.deployerWalletId,
     abiJson: JSON.stringify(preparation.abi),
@@ -95,6 +100,12 @@ export function createCanonicalDeploymentRequest(preparation: CircleContractDepl
     constructorParameters: preparation.constructorParameters,
     fee: { type: "level", config: { feeLevel: "MEDIUM" } },
   };
+}
+
+function assertAlphanumericDescription(description: string): void {
+  if (!/^[A-Za-z0-9]+$/.test(description)) {
+    throw new TypeError("Circle contract description must contain only ASCII letters and digits");
+  }
 }
 
 export function deriveConstructorSignature(abi: readonly unknown[]): string {

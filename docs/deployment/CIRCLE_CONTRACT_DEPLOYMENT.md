@@ -2,7 +2,7 @@
 
 ## Current status
 
-The production-safe Circle deployment pipeline is implemented. Earlier deployment requests received explicit HTTP 400 responses. No contract or transaction IDs were returned, and no deployment was completed. Future diagnostics expose only safe Circle code, message, validation field, and request ID values when available.
+The production-safe Circle deployment pipeline is implemented. Circle contract descriptions for this deployment operation must be strictly alphanumeric (`^[A-Za-z0-9]+$`). Settle uses the canonical description `SettleUSDCSettlementArcTestnet`; punctuation and whitespace are deliberately avoided. A prior request was explicitly rejected on the `description` field with HTTP 400. No contract or transaction ID was returned, and no deployment completed during that attempt. Future diagnostics expose only safe Circle code, message, validation field, and request ID values when available.
 
 ## 1. Prepare and preflight
 

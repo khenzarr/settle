@@ -4,7 +4,7 @@
 
 Settle uses Circle Developer-Controlled Wallets as the planned custody boundary for the Arc Testnet settlement deployment and initial operator activity. This foundation is server-only and does not place Circle credentials, entity-secret material, or signing material in browser code.
 
-The configured Arc Testnet EOA predates this change. Earlier deployment requests received explicit HTTP 400 responses. No contract or transaction IDs were returned, and no deployment was completed. Future diagnostics expose only safe Circle code, message, validation field, and request ID values when available. Contract deployment remains a dry-run unless the operator supplies both `--execute` and a caller-generated UUIDv4 idempotency key.
+The configured Arc Testnet EOA predates this change. Circle contract descriptions for this deployment operation must be strictly alphanumeric (`^[A-Za-z0-9]+$`). Settle uses `SettleUSDCSettlementArcTestnet`; punctuation and whitespace are deliberately avoided. A prior request was explicitly rejected on the `description` field with HTTP 400. No contract or transaction ID was returned, and no deployment completed during that attempt. Future diagnostics expose only safe Circle code, message, validation field, and request ID values when available. Contract deployment remains a dry-run unless the operator supplies both `--execute` and a caller-generated UUIDv4 idempotency key.
 
 ## Why the first wallet is an Arc Testnet EOA
 
