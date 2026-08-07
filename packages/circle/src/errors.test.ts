@@ -2,8 +2,130 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { CircleIntegrationError, normalizeCircleError } from "./errors.ts";
 
+function createWrappedBadRequest(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    status: 400,
+    code: 2,
+    message: "API parameter invalid",
+    error: {
+      code: "ERR_BAD_REQUEST",
+      status: 400,
+      response: {
+        status: 400,
+        data: {
+          code: 2,
+          message: "API parameter invalid",
+          errors: [
+            {
+              error: "invalid_value",
+              location: "fieldName",
+              message: "safe validation message",
+              invalidValue: "sensitive-request-material",
+            },
+          ],
+        },
+        headers: {
+          get(name: string) {
+            return name === "x-request-id" ? "safe-request-id" : undefined;
+          },
+        },
+      },
+    },
+    ...overrides,
+  };
+}
+
+test("installed Circle BadRequestError wrapper shape is normalized from allowlisted paths", () => {
+  const raw = createWrappedBadRequest();
+  const error = normalizeCircleError(raw, "deployContract");
+
+  assert.equal(error.status, 400);
+  assert.equal(error.code, "2");
+  assert.equal(error.circleMessage, "API parameter invalid");
+  assert.deepEqual(error.validationDetails, [{ field: "fieldName", message: "safe validation message" }]);
+  assert.equal(error.requestId, "safe-request-id");
+  assert.equal(error.message, "Circle operation deployContract failed (status=400, code=2, message=API parameter invalid, validation=fieldName: safe validation message, requestId=safe-request-id)");
+  assert.doesNotMatch(error.message, /ERR_BAD_REQUEST|Request failed with status code|sensitive-request-material|invalidValue/);
+  assert.doesNotMatch(JSON.stringify(error), /ERR_BAD_REQUEST|sensitive-request-material|invalidValue/);
+});
+
+test("Circle wrapper status preference and retained Axios response fallback are preserved", () => {
+  const preferred = normalizeCircleError(createWrappedBadRequest({ status: 422 }), "deployContract");
+  assert.equal(preferred.status, 422);
+
+  const fallbackFixture = createWrappedBadRequest({ status: undefined });
+  const retainedAxios = fallbackFixture.error as Record<string, unknown>;
+  retainedAxios.status = undefined;
+  const fallback = normalizeCircleError(fallbackFixture, "deployContract");
+  assert.equal(fallback.status, 400);
+});
+
+test("numeric and string Circle codes are supported without preferring Axios transport codes", () => {
+  assert.equal(normalizeCircleError(createWrappedBadRequest(), "deployContract").code, "2");
+  assert.equal(normalizeCircleError(createWrappedBadRequest({ code: "invalid_request" }), "deployContract").code, "invalid_request");
+});
+
+test("Circle wrapper message is preferred and wrapped parsed-body message is its fallback", () => {
+  const fixture = createWrappedBadRequest({ message: "Circle API message" });
+  const retainedAxios = fixture.error as Record<string, unknown>;
+  retainedAxios.message = "Request failed with status code 400";
+  assert.equal(normalizeCircleError(fixture, "deployContract").circleMessage, "Circle API message");
+
+  const fallback = normalizeCircleError(createWrappedBadRequest({ message: undefined }), "deployContract");
+  assert.equal(fallback.circleMessage, "API parameter invalid");
+  assert.doesNotMatch(fallback.message, /Request failed with status code 400/);
+});
+
+test("wrapped validation details sanitize messages and never retain invalidValue", () => {
+  const abiLikeInvalidValue = `contract-input-${"abcdef0123456789".repeat(80)}`;
+  const fixture = createWrappedBadRequest();
+  const retainedAxios = fixture.error as Record<string, unknown>;
+  const response = retainedAxios.response as Record<string, unknown>;
+  const data = response.data as Record<string, unknown>;
+  data.errors = [
+    {
+      location: "fieldName",
+      message: "Invalid value with CIRCLE_API_KEY=api-secret",
+      invalidValue: abiLikeInvalidValue,
+    },
+  ];
+
+  const error = normalizeCircleError(fixture, "deployContract");
+  assert.deepEqual(error.validationDetails, [
+    { field: "fieldName", message: "Invalid value with CIRCLE_API_KEY=[REDACTED]" },
+  ]);
+  assert.match(error.message, /validation=fieldName: Invalid value with CIRCLE_API_KEY=\[REDACTED\]/);
+  assert.doesNotMatch(error.message, /api-secret|contract-input|abcdef0123456789|invalidValue/);
+  assert.doesNotMatch(JSON.stringify(error), /api-secret|contract-input|abcdef0123456789|invalidValue/);
+});
+
+test("request ID lookup supports AxiosHeaders get and lowercase direct properties", () => {
+  assert.equal(normalizeCircleError(createWrappedBadRequest(), "deployContract").requestId, "safe-request-id");
+
+  const fixture = createWrappedBadRequest();
+  const retainedAxios = fixture.error as Record<string, unknown>;
+  const response = retainedAxios.response as Record<string, unknown>;
+  response.headers = { "x-request-id": "direct-request-id", authorization: "Bearer header-secret" };
+  const direct = normalizeCircleError(fixture, "deployContract");
+  assert.equal(direct.requestId, "direct-request-id");
+  assert.doesNotMatch(JSON.stringify(direct), /header-secret|authorization/);
+});
+
+test("malformed or throwing AxiosHeaders getters do not break normalization", () => {
+  for (const get of ["not-callable", () => { throw new Error("header-secret"); }]) {
+    const fixture = createWrappedBadRequest();
+    const retainedAxios = fixture.error as Record<string, unknown>;
+    const response = retainedAxios.response as Record<string, unknown>;
+    response.headers = { get, "x-request-id": "fallback-request-id", authorization: "Bearer header-secret" };
+    const error = normalizeCircleError(fixture, "deployContract");
+    assert.equal(error.requestId, "fallback-request-id");
+    assert.doesNotMatch(error.message, /header-secret|authorization/);
+  }
+});
+
 test("safe error normalization preserves only publication-safe Circle diagnostics", () => {
   const error = normalizeCircleError({
+    code: "ERR_BAD_REQUEST",
     message: "Bearer secret-token",
     response: {
       status: 429,
@@ -13,6 +135,7 @@ test("safe error normalization preserves only publication-safe Circle diagnostic
   }, "listWallets");
   assert.ok(error instanceof CircleIntegrationError);
   assert.equal(error.message, "Circle operation listWallets failed (status=429, code=rate_limit, message=Too many requests, requestId=req-123)");
+  assert.equal(error.code, "rate_limit");
   assert.equal(error.circleMessage, "Too many requests");
   assert.equal(JSON.stringify(error).includes("secret"), false);
 });

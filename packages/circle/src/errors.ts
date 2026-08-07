@@ -46,19 +46,48 @@ export class CircleIntegrationError extends Error {
 export function normalizeCircleError(error: unknown, operation: string): CircleIntegrationError {
   if (error instanceof CircleIntegrationError) return error;
 
-  const record = asRecord(error);
-  const response = asRecord(record?.response);
-  const data = asRecord(response?.data);
-  const nestedError = asRecord(data?.error);
-  const headers = asRecord(response?.headers);
+  const wrapper = asRecord(error);
+  const retainedAxiosError = asRecord(wrapper?.error);
+  const retainedAxiosResponse = asRecord(retainedAxiosError?.response);
+  const wrappedData = asRecord(retainedAxiosResponse?.data);
+  const wrappedNestedError = asRecord(wrappedData?.error);
+  const wrappedHeaders = asRecord(retainedAxiosResponse?.headers);
+
+  const directResponse = asRecord(wrapper?.response);
+  const directData = asRecord(directResponse?.data);
+  const directNestedError = asRecord(directData?.error);
+  const directHeaders = asRecord(directResponse?.headers);
+  const isCircleWrapper = retainedAxiosResponse !== undefined;
 
   return new CircleIntegrationError({
     operation: redactString(operation),
-    status: asFiniteNumber(response?.status) ?? asFiniteNumber(record?.status),
-    code: asSafeIdentifier(data?.code) ?? asSafeIdentifier(nestedError?.code) ?? asSafeIdentifier(record?.code),
-    circleMessage: asSafeMessage(data?.message) ?? asSafeMessage(nestedError?.message),
-    validationDetails: readSafeValidationDetails(data?.errors ?? nestedError?.details),
-    requestId: asSafeIdentifier(headers?.["x-request-id"] ?? headers?.["X-Request-Id"] ?? data?.requestId ?? record?.requestId),
+    status: asFiniteNumber(isCircleWrapper ? wrapper?.status : undefined)
+      ?? asFiniteNumber(retainedAxiosError?.status)
+      ?? asFiniteNumber(retainedAxiosResponse?.status)
+      ?? asFiniteNumber(directResponse?.status)
+      ?? asFiniteNumber(isCircleWrapper ? undefined : wrapper?.status),
+    code: asSafeCode(isCircleWrapper ? wrapper?.code : undefined)
+      ?? asSafeCode(wrappedData?.code)
+      ?? asSafeCode(wrappedNestedError?.code)
+      ?? asSafeCode(directData?.code)
+      ?? asSafeCode(directNestedError?.code)
+      ?? asSafeCode(isCircleWrapper ? undefined : wrapper?.code),
+    circleMessage: asSafeMessage(isCircleWrapper ? wrapper?.message : undefined)
+      ?? asSafeMessage(wrappedData?.message)
+      ?? asSafeMessage(wrappedNestedError?.message)
+      ?? asSafeMessage(directData?.message)
+      ?? asSafeMessage(directNestedError?.message),
+    validationDetails: readSafeValidationDetails(
+      wrappedData?.errors
+      ?? wrappedNestedError?.details
+      ?? directData?.errors
+      ?? directNestedError?.details,
+    ),
+    requestId: readSafeRequestId(wrappedHeaders)
+      ?? readSafeRequestId(directHeaders)
+      ?? asSafeIdentifier(wrappedData?.requestId)
+      ?? asSafeIdentifier(directData?.requestId)
+      ?? asSafeIdentifier(wrapper?.requestId),
   });
 }
 
@@ -81,6 +110,27 @@ function asFiniteNumber(value: unknown): number | undefined {
 function asSafeIdentifier(value: unknown): string | undefined {
   if (typeof value !== "string" || value.length === 0 || value.length > 200) return undefined;
   return /^[A-Za-z0-9._:/-]+$/.test(value) ? value : undefined;
+}
+
+function asSafeCode(value: unknown): string | undefined {
+  if (typeof value === "number") return Number.isFinite(value) ? String(value) : undefined;
+  return asSafeIdentifier(value);
+}
+
+function readSafeRequestId(headers: Record<string, unknown> | undefined): string | undefined {
+  if (headers === undefined) return undefined;
+
+  const get = headers.get;
+  if (typeof get === "function") {
+    try {
+      const requestId = asSafeIdentifier(Reflect.apply(get, headers, ["x-request-id"]));
+      if (requestId !== undefined) return requestId;
+    } catch {
+      // Ignore malformed or throwing header accessors and try allowlisted direct properties.
+    }
+  }
+
+  return asSafeIdentifier(headers["x-request-id"] ?? headers["X-Request-Id"]);
 }
 
 function asSafeMessage(value: unknown): string | undefined {
