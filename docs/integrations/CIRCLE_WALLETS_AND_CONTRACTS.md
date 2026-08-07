@@ -195,6 +195,29 @@ The source balance view changed from `19.902646 USDC` to `19.890685 USDC`, while
 
 The corrected token-address request included `blockchain: ARC-TESTNET`. Circle runtime requires this field when `tokenAddress` is used, even though the installed Developer-Controlled Wallets SDK 10.8.0 typing permits its omission in that token input. The earlier request was rejected by Circle with HTTP 400 before transaction creation because it omitted `blockchain`; it created no transaction and moved no funds.
 
+#### Verified live contract execution
+
+D3B3B2B2 established the guarded live contract-execution path, and D3B3B2B3 recorded one controlled live proof against the canonical deployed `SettlementEscrow` at `0x3e438ae878a8dc02c83f5545047cbde33a4f795f` on `ARC-TESTNET` (chain ID `5042002`). The generic contract-call command remains dry-run by default: dry run validates inputs and prints a safe plan without initializing the Circle client, reading credentials, generating an idempotency key, or calling a mutation endpoint. This evidence records the separate execution proof and contains no idempotency key or secret.
+
+Circle accepted exactly one `createContractExecutionTransaction` mutation submission. The resulting Circle operation was `CONTRACT_EXECUTION`, with transaction ID `d1cec9f7-908d-5476-ab78-e8276b86e552`, and its observed state progression was `INITIATED` -> `SENT` -> `COMPLETE`. The Circle-reported network fee was `0.00071392179159`. The configured wallet and transaction sender was `0x4ac8d35f1795531f1e0bef3826db5aab730fcd34`.
+
+The target function was Solidity `paused()`, with ABI signature `paused()` and no parameters. It was selected because it is a view function with no escrow lifecycle semantics and no fund-transfer behavior, making it suitable for proving contract-execution transport while avoiding intentional application-state mutation. Circle did not perform `eth_call`: Circle submitted an actual EVM transaction to the contract through `createContractExecutionTransaction`; the Solidity function invoked by that transaction is itself view/read-only.
+
+Public transaction evidence:
+
+- Target contract: `0x3e438ae878a8dc02c83f5545047cbde33a4f795f`
+- Function and calldata: `paused()`, `0x5c975abb`
+- Transaction value: `0`
+- Arc transaction hash: `0x9b5a3a4141c6d4b743f81c9eeb74dde7f6af570bd2c062ba05b109d8045375a5`
+- Arc block: `55820737`
+- ArcScan: <https://testnet.arcscan.app/tx/0x9b5a3a4141c6d4b743f81c9eeb74dde7f6af570bd2c062ba05b109d8045375a5>
+
+After Circle reported `COMPLETE`, independent Arc RPC verification confirmed that the transaction existed, the receipt succeeded, the transaction sender matched the configured Circle wallet, both transaction and receipt `to` values matched the canonical `SettlementEscrow`, the input exactly matched selector `0x5c975abb`, the value was zero, and the block was `55820737`. Circle `COMPLETE` and this independent transaction/receipt proof are distinct stages of the evidence.
+
+Pre-state checks confirmed chain ID `5042002`, deployed runtime bytecode, settlement token `0x3600000000000000000000000000000000000000` with 6 decimals, administrator/operator/arbitrator/pauser roles, `paused: false`, `totalActiveEscrow: 0`, and runtime integrity exact after immutable substitution. Post-state checks confirmed `paused: false`, `totalActiveEscrow: 0`, and the same runtime integrity. Therefore the observed state was `paused: false -> false` and `totalActiveEscrow: 0 -> 0`; no escrow lifecycle state, role state, token transfer, or value transfer was changed.
+
+This proof demonstrates the Circle Developer-Controlled Wallet contract-execution primitive against the deployed canonical contract. A successful transaction invoking a view function does not prove that any state-changing `SettlementEscrow` lifecycle function has been exercised or validated.
+
 ## Long-term wallet access
 
 The Circle Developer-Controlled Wallet does not expose a conventional raw EVM private key. Normal wallet control is provided through Circle's Developer-Controlled Wallet infrastructure and authenticated server-side operations. Settle's read-only operator surface provides durable access to wallet metadata, balances, and inbound/outbound transaction history without exporting a raw private key. The guarded mutation foundation above adds separately controlled transfer and generic contract-execution preparation while preserving dry run as the default.
