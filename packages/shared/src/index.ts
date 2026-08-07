@@ -18,5 +18,7 @@ export { MARKETPLACE_COMMAND_ABI_SIGNATURES, MarketplaceSignerKind, createApprov
 export type { ApproveUsdcCommandPlan, ApproveUsdcPlanInput, CreateOrderCommandPlan, CreateOrderPlanInput, FundOrderCommandPlan, FundOrderPlanInput, MarketplaceCommandChain, MarketplaceCommandPlan, MarketplaceCommandPrerequisite, MarketplaceOperationKind, MarketplaceSignerKind as MarketplaceSignerKindValue, MarketplaceSignerRequirement, MarketplaceStateTransition, MarketplaceStoredOrderInput, MarketplaceUsdcEffect, ReleaseOrderCommandPlan, ReleaseOrderPlanInput } from "./settlement-command-plan.ts";
 export { SETTLEMENT_ORDER_EVENT_KINDS, decodeSettlementOrderEvent } from "./settlement-events.ts";
 export type { SettlementEventLog, SettlementOrderEvent, SettlementOrderEventKind } from "./settlement-events.ts";
+export { prepareBuyerTransactionIntent } from "./settlement-transaction-intent.ts";
+export type { BuyerTransactionIntent } from "./settlement-transaction-intent.ts";
 export { SettlementReadError, createHttpSettlementRpcTransport, createSettlementEscrowReader } from "./settlement-read.ts";
 export type { NormalizedOrderTimestamps, RawSettlementOrder, SettlementEscrowReader, SettlementEscrowReaderConfig, SettlementOrderProjection, SettlementOrderProjectionResult, SettlementOrderReadResult, SettlementPayoutProjection, SettlementReadErrorCode, SettlementRpcTransport, SettlementSplitsReadResult } from "./settlement-read.ts";
