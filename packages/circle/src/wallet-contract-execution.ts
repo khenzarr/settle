@@ -4,7 +4,7 @@ import { withCircleErrorNormalization } from "./errors.ts";
 import { CIRCLE_ARC_TESTNET_BLOCKCHAIN, preflightDeployerWallet } from "./wallets.ts";
 import type { CircleWalletRecord } from "./wallets.ts";
 import { executeCircleMutationSubmission, formatFeePolicy, formatMutationSubmission, parseEvmAddress, parseFeeLevel, parseMutationExecutionGate, parseOptionalNonNegativeDecimal, readStrictOptions, rejectLocalMutation, validateSubmissionResult } from "./wallet-mutations.ts";
-import type { CircleMutationFeeLevel, MutationSubmissionResult } from "./wallet-mutations.ts";
+import type { CircleMutationFeeLevel, MutationExecutionGate, MutationSubmissionResult } from "./wallet-mutations.ts";
 
 export interface WalletContractExecutionPlan {
   readonly operation: "wallet contract execution";
@@ -31,6 +31,11 @@ export interface WalletContractExecutionArguments {
 
 export interface WalletContractExecutionGateway {
   submit(input: CreateContractExecutionTransactionInput): Promise<MutationSubmissionResult>;
+}
+
+export interface WalletContractExecutionDependencies {
+  readonly preflightGateway: Readonly<{ getWallet(walletId: string): Promise<CircleWalletRecord> }>;
+  readonly mutationGateway: WalletContractExecutionGateway;
 }
 
 export function parseWalletContractExecutionArguments(args: readonly string[]): WalletContractExecutionArguments {
@@ -76,10 +81,7 @@ export async function runWalletContractExecutionCommand(input: Readonly<{
   args: readonly string[];
   sourceAddress: string;
   configuredWalletId: string;
-  createExecutionDependencies?: () => Readonly<{
-    preflightGateway: Readonly<{ getWallet(walletId: string): Promise<CircleWalletRecord> }>;
-    mutationGateway: WalletContractExecutionGateway;
-  }>;
+  createExecutionDependencies?: () => WalletContractExecutionDependencies;
 }>): Promise<readonly string[]> {
   let args: WalletContractExecutionArguments;
   let plan: WalletContractExecutionPlan;
@@ -89,12 +91,30 @@ export async function runWalletContractExecutionCommand(input: Readonly<{
   } catch (error) {
     rejectLocalMutation(error);
   }
-  if (!args.execute) return formatWalletContractExecutionPlan(plan);
-  if (input.createExecutionDependencies === undefined) throw new TypeError("Execution dependencies are required with --execute");
+  return runPreparedWalletContractExecution({
+    plan,
+    gate: args,
+    configuredWalletId: input.configuredWalletId,
+    ...(input.createExecutionDependencies === undefined ? {} : { createExecutionDependencies: input.createExecutionDependencies }),
+  });
+}
+
+export async function runPreparedWalletContractExecution(input: Readonly<{
+  plan: WalletContractExecutionPlan;
+  gate: MutationExecutionGate;
+  configuredWalletId: string;
+  createExecutionDependencies?: () => WalletContractExecutionDependencies;
+}>): Promise<readonly string[]> {
+  if (!input.gate.execute) return formatWalletContractExecutionPlan(input.plan);
+  if (input.createExecutionDependencies === undefined) throw new TypeError("Execution dependencies are required with execution");
   const dependencies = input.createExecutionDependencies();
-  await preflightDeployerWallet({ gateway: dependencies.preflightGateway, configuredWalletId: input.configuredWalletId, configuredAddress: plan.sourceAddress });
+  await preflightDeployerWallet({
+    gateway: dependencies.preflightGateway,
+    configuredWalletId: input.configuredWalletId,
+    configuredAddress: input.plan.sourceAddress,
+  });
   const result = await executeCircleMutationSubmission(() => dependencies.mutationGateway.submit(
-    createContractExecutionRequest(plan, input.configuredWalletId, args.idempotencyKey!),
+    createContractExecutionRequest(input.plan, input.configuredWalletId, input.gate.idempotencyKey!),
   ));
   return formatMutationSubmission(result);
 }

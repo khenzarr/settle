@@ -20,5 +20,7 @@ export { CircleMutationAmbiguousError, CircleMutationRecoveryRequiredError, Circ
 export type { CircleMutationFeeLevel, CircleMutationOutcome, MutationSubmissionResult } from "./wallet-mutations.ts";
 export { createCircleWalletTransferGateway, formatWalletTransferPlan, parseWalletTransferArguments, prepareWalletTransfer, runWalletTransferCommand } from "./wallet-transfer.ts";
 export type { TransferTokenReference, WalletTransferArguments, WalletTransferGateway, WalletTransferPlan } from "./wallet-transfer.ts";
-export { createCircleWalletContractExecutionGateway, formatWalletContractExecutionPlan, parseWalletContractExecutionArguments, prepareWalletContractExecution, runWalletContractExecutionCommand } from "./wallet-contract-execution.ts";
-export type { WalletContractExecutionArguments, WalletContractExecutionGateway, WalletContractExecutionPlan } from "./wallet-contract-execution.ts";
+export { createCircleWalletContractExecutionGateway, formatWalletContractExecutionPlan, parseWalletContractExecutionArguments, prepareWalletContractExecution, runPreparedWalletContractExecution, runWalletContractExecutionCommand } from "./wallet-contract-execution.ts";
+export type { WalletContractExecutionArguments, WalletContractExecutionDependencies, WalletContractExecutionGateway, WalletContractExecutionPlan } from "./wallet-contract-execution.ts";
+export { formatOperatorSettlementExecutionPreparation, prepareOperatorSettlementExecution, runOperatorSettlementExecution } from "./operator-settlement-plan.ts";
+export type { OperatorSettlementCommandPlan, OperatorSettlementExecutionPreparation, PrepareOperatorSettlementExecutionInput, RunOperatorSettlementExecutionInput } from "./operator-settlement-plan.ts";
