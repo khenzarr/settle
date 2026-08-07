@@ -16,7 +16,7 @@ Estimate and execute mode retrieve the configured Circle wallet first. The recor
 pnpm circle:contract:estimate
 ```
 
-This is the only live operation that is non-mutating. It uses fee level `MEDIUM` and prints only available safe fee and request metadata. It is intentionally not part of `pnpm validate`.
+This is the only live operation that is non-mutating. The Circle estimate request uses wallet-ID addressing and sends `walletId`, bytecode, ABI JSON, the ABI-derived constructor signature, and constructor parameters. Blockchain and source address are validated through wallet preflight and retained for publication-safe operator output, but are omitted from the estimate API payload. The command uses fee level `MEDIUM` and prints only available safe fee and request metadata. It is intentionally not part of `pnpm validate`.
 
 ## 3. Review the dry-run plan
 

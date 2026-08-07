@@ -15,7 +15,10 @@ test("estimate uses the exact SDK request and returns only safe medium fee field
   let request: unknown;
   const client = { async estimateContractDeploymentFee(input: unknown) { request = input; return { data: { medium: { gasLimit: "1", networkFee: "2", networkFeeRaw: "3" } } }; } } as unknown as CircleSmartContractPlatformClient;
   const result = await estimateDeployment({ client, preparation });
-  assert.deepEqual(request, { blockchain: "ARC-TESTNET", bytecode: "0x6001", abiJson: JSON.stringify(preparation.abi), constructorSignature: preparation.constructorSignature, constructorParameters: [...preparation.constructorParameters], sourceAddress: preparation.deployerAddress, walletId: preparation.deployerWalletId });
+  assert.deepEqual(request, { walletId: preparation.deployerWalletId, bytecode: "0x6001", abiJson: JSON.stringify(preparation.abi), constructorSignature: preparation.constructorSignature, constructorParameters: [...preparation.constructorParameters] });
+  assert.deepEqual(Object.keys(request as object), ["walletId", "bytecode", "abiJson", "constructorSignature", "constructorParameters"]);
+  assert.equal(Object.hasOwn(request as object, "blockchain"), false);
+  assert.equal(Object.hasOwn(request as object, "sourceAddress"), false);
   assert.deepEqual(result, { blockchain: "ARC-TESTNET", sourceWalletAddress: preparation.deployerAddress, feeLevel: "MEDIUM", gasLimit: "1", estimatedNetworkFee: "2", estimatedRawNetworkFee: "3" });
   assert.equal(JSON.stringify(result).includes("bytecode"), false);
   assert.equal(JSON.stringify(result).includes("constructor"), false);
@@ -62,11 +65,14 @@ test("explicit execution preflights and submits exactly once", async () => {
 });
 
 test("deploy submits one canonical SDK request and validates response IDs", async () => {
-  let calls = 0, request: any;
+  let calls = 0, request: unknown;
   const client = { async deployContract(input: unknown) { calls++; request = input; return { data: { contractId: "11111111-1111-4111-8111-111111111111", transactionId: "22222222-2222-4222-8222-222222222222" } }; } } as unknown as CircleSmartContractPlatformClient;
   const canonical = { name: "SettlementEscrow" as const, description: "description", blockchain: "ARC-TESTNET" as const, walletId: "wallet-id", abiJson: "[]", bytecode: "0x6001", constructorParameters: preparation.constructorParameters, fee: { type: "level" as const, config: { feeLevel: "MEDIUM" as const } } };
   const result = await submitDeployment({ client, request: canonical, idempotencyKey: "33333333-3333-4333-8333-333333333333" });
-  assert.equal(calls, 1); assert.equal(request.idempotencyKey, "33333333-3333-4333-8333-333333333333"); assert.deepEqual(result, { contractId: "11111111-1111-4111-8111-111111111111", transactionId: "22222222-2222-4222-8222-222222222222" });
+  assert.equal(calls, 1);
+  assert.deepEqual(request, { ...canonical, constructorParameters: [...canonical.constructorParameters], idempotencyKey: "33333333-3333-4333-8333-333333333333" });
+  assert.deepEqual(Object.keys(request as object), ["name", "description", "blockchain", "walletId", "abiJson", "bytecode", "constructorParameters", "fee", "idempotencyKey"]);
+  assert.deepEqual(result, { contractId: "11111111-1111-4111-8111-111111111111", transactionId: "22222222-2222-4222-8222-222222222222" });
   const bad = { async deployContract() { return { data: { contractId: "bad", transactionId: "bad" } }; } } as unknown as CircleSmartContractPlatformClient;
   await assert.rejects(() => submitDeployment({ client: bad, request: canonical, idempotencyKey: "33333333-3333-4333-8333-333333333333" }));
 });

@@ -107,13 +107,11 @@ export async function estimateDeployment(input: Readonly<{
 }>): Promise<SafeFeeEstimate> {
   return withCircleErrorNormalization("estimateContractDeploymentFee", async () => {
     const response = await input.client.estimateContractDeploymentFee({
-      blockchain: input.preparation.blockchain,
+      walletId: input.preparation.deployerWalletId,
       bytecode: input.preparation.bytecode,
       abiJson: JSON.stringify(input.preparation.abi),
       constructorSignature: input.preparation.constructorSignature,
       constructorParameters: [...input.preparation.constructorParameters],
-      sourceAddress: input.preparation.deployerAddress,
-      walletId: input.preparation.deployerWalletId,
     });
     const fee = response.data?.medium;
     return {

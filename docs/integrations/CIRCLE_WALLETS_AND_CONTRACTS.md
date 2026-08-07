@@ -29,7 +29,7 @@ CIRCLE_DEPLOYMENT_TRANSACTION_ID=
 SETTLEMENT_CONTRACT_ADDRESS=
 ```
 
-Empty and whitespace-only values are missing. `CIRCLE_API_KEY` and `CIRCLE_ENTITY_SECRET` must never use a `NEXT_PUBLIC_` prefix. Scripts never print those values, never print the complete environment, and never write credentials to disk. Error normalization retains only a safe operation name, HTTP status, Circle error code, and request ID.
+Empty and whitespace-only values are missing. `CIRCLE_API_KEY` and `CIRCLE_ENTITY_SECRET` must never use a `NEXT_PUBLIC_` prefix. Scripts never print those values, never print the complete environment, and never write credentials to disk. Error normalization retains only a safe operation name, HTTP status, Circle error code, sanitized Circle message, and sanitized request ID.
 
 The reusable redactor covers Circle API keys, Circle entity secrets, `DEPLOYER_PRIVATE_KEY`, authorization headers, bearer tokens, and entity-secret ciphertext fields.
 
@@ -68,7 +68,7 @@ The canonical request derives its constructor signature from the generated ABI a
 
 Before estimate or submission, Circle's `getWallet` operation must return the configured wallet ID and address, `ARC-TESTNET`, and `EOA`. Developer custody and `LIVE` state are also required when those fields are exposed.
 
-`pnpm circle:contract:estimate` performs that preflight and then makes only Circle's non-mutating deployment-fee estimate request. It prints available medium-fee fields without ABI, bytecode, credentials, or a complete SDK response.
+`pnpm circle:contract:estimate` performs that preflight and then makes only Circle's non-mutating deployment-fee estimate request. The Circle request uses wallet-ID addressing: it includes `walletId` and omits `blockchain` and `sourceAddress`. Blockchain and source address remain in the local canonical model for validation and are retained in publication-safe operator output. It prints available medium-fee fields without ABI, bytecode, credentials, or a complete SDK response.
 
 `pnpm circle:contract:deploy` prints a publication-safe plan by default and does not initialize Circle clients. Submission requires:
 

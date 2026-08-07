@@ -80,12 +80,14 @@ test("wallet preflight accepts matching live developer-controlled metadata", asy
   assert.equal(result.state, "LIVE");
 });
 
-test("wallet preflight rejects ID and address mismatches", async () => {
+test("wallet preflight validates configured ID and address", async () => {
   await assert.rejects(() => preflightDeployerWallet({ gateway: fakeGateway([]), configuredWalletId: "other", configuredAddress: validWallet.address as `0x${string}` }), /wallet ID/);
   await assert.rejects(() => preflightDeployerWallet({ gateway: fakeGateway([]), configuredWalletId: validWallet.id, configuredAddress: "0x2222222222222222222222222222222222222222" }), /wallet address/);
 });
 
-test("wallet validation rejects wrong account type and non-live state", async () => {
+test("wallet preflight validates ARC-TESTNET, EOA, and live state", async () => {
+  const wrongBlockchain = { ...fakeGateway([]), async getWallet() { return { ...validWallet, blockchain: "ETH-SEPOLIA" }; } };
+  await assert.rejects(() => preflightDeployerWallet({ gateway: wrongBlockchain, configuredWalletId: validWallet.id, configuredAddress: validWallet.address as `0x${string}` }), /ARC-TESTNET/);
   assert.throws(() => validateArcTestnetWallet({ ...validWallet, accountType: "SCA" }), /EOA/);
   const gateway = { ...fakeGateway([]), async getWallet() { return { ...validWallet, state: "FROZEN" }; } };
   await assert.rejects(() => preflightDeployerWallet({ gateway, configuredWalletId: validWallet.id, configuredAddress: validWallet.address as `0x${string}` }), /LIVE/);
