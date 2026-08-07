@@ -61,10 +61,12 @@ CLI IDs override environment IDs. Both Circle records must be `ARC-TESTNET`. `CO
 
 After Circle reports `COMPLETE` and supplies an address, the status command calls only `eth_chainId` and `eth_getCode` through the configured Arc RPC/fallback. It requires chain ID `5042002`, a valid non-zero address, and non-empty deployed bytecode, and validates any transaction hash before printing ArcScan links.
 
-Then manually set `SETTLEMENT_CONTRACT_ADDRESS` and run:
+Set `SETTLEMENT_CONTRACT_ADDRESS` in the ignored local environment, then run the repeatable deployed-contract integrity check:
 
 ```sh
-pnpm contracts:deployment:verify
+pnpm circle:contract:integrity
 ```
 
-That independent read-only Foundry command—not the Circle status command—verifies roles and initial state. Complete `docs/deployment/DEPLOYMENT_EVIDENCE_TEMPLATE.md` with the IDs, transaction hash, address, ArcScan evidence, estimate, and Foundry verification output.
+This command builds the local artifact, then uses only read-only Arc Testnet JSON-RPC calls. It verifies the canonical chain, deployed runtime bytecode, official USDC and its 6 decimals, ABI-exposed role identifiers and grants, unpaused state, zero initial active escrow, and exact runtime equality after substituting the artifact-declared immutable USDC ranges. It submits no transaction, makes no Circle request, and performs no mutation.
+
+Complete `docs/deployment/DEPLOYMENT_EVIDENCE_TEMPLATE.md` with the IDs, transaction hash, address, ArcScan evidence, estimate, and integrity output. This proves deployment wiring and runtime integrity; it does not claim explorer or Circle source-code verification. Source verification remains `UNVERIFIED` until the separate verification task completes.

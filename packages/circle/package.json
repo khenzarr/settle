@@ -20,6 +20,7 @@
     "contract:estimate": "node --env-file-if-exists=../../.env scripts/estimate-contract-deployment.ts",
     "contract:deploy": "node --env-file-if-exists=../../.env scripts/deploy-contract.ts",
     "contract:status": "node --env-file-if-exists=../../.env scripts/check-contract-deployment.ts",
+    "contract:integrity": "node --env-file-if-exists=../../.env scripts/check-settlement-integrity.ts",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test": "node --test src/*.test.ts"
@@ -27,6 +28,7 @@
   "dependencies": {
     "@circle-fin/developer-controlled-wallets": "10.8.0",
     "@circle-fin/smart-contract-platform": "10.8.0",
+    "@noble/hashes": "2.0.1",
     "@settle/shared": "workspace:*",
     "zod": "4.4.3"
   },

@@ -8,5 +8,7 @@ export type { DeploymentSubmissionResult, SafeContractStatus, SafeFeeEstimate, S
 export { SUCCESS_TRANSACTION_STATE, TERMINAL_FAILURE_TRANSACTION_STATES, parseDeploymentStatusArguments, parseWaitOptions, verifyArcDeploymentBytecode, waitForDeployment } from "./deployment-status.ts";
 export { CircleIntegrationError, normalizeCircleError, withCircleErrorNormalization } from "./errors.ts";
 export { REDACTED, redactSecrets, redactString } from "./redaction.ts";
+export { checkSettlementIntegrity, formatSettlementIntegrityReport, parseSettlementIntegrityConfig } from "./settlement-integrity.ts";
+export type { SettlementIntegrityConfig, SettlementIntegrityReport } from "./settlement-integrity.ts";
 export { CIRCLE_ARC_TESTNET_BLOCKCHAIN, CIRCLE_DEPLOYER_ACCOUNT_TYPE, createCircleWalletGateway, executeDeployerWalletPlan, planDeployerWallet, preflightDeployerWallet, validateArcTestnetWallet } from "./wallets.ts";
 export type { CircleWalletGateway, CircleWalletRecord, DeployerWalletPlan, ExecuteDeployerWalletInput, PublicationSafeWalletMetadata } from "./wallets.ts";

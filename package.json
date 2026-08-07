@@ -25,6 +25,7 @@
     "circle:contract:estimate": "pnpm contracts:abi:check && pnpm --filter @settle/circle contract:estimate",
     "circle:contract:deploy": "pnpm contracts:abi:check && pnpm --filter @settle/circle contract:deploy",
     "circle:contract:status": "pnpm --filter @settle/circle contract:status",
+    "circle:contract:integrity": "pnpm contracts:build && pnpm --filter @settle/circle contract:integrity",
     "validate": "pnpm circle:config:check && pnpm contracts:abi:check && pnpm contracts:fmt:check && pnpm contracts:test && pnpm typecheck && pnpm test"
   }
 }
