@@ -139,7 +139,9 @@ function createTransferRequest(plan: WalletTransferPlan, walletId: string, idemp
   };
   return plan.token.kind === "token-id"
     ? { ...common, tokenId: plan.token.tokenId }
-    : { ...common, tokenAddress: plan.token.tokenAddress };
+    // SDK 10.8.0 types blockchain as incompatible with walletId, but Circle
+    // runtime requires it when tokenId is absent from a token-address transfer.
+    : { ...common, tokenAddress: plan.token.tokenAddress, blockchain: plan.blockchain } as unknown as CreateTransferTransactionInput;
 }
 
 function parseTokenId(value: string): TransferTokenReference {

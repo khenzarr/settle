@@ -38,8 +38,14 @@ test("transfer defaults to dry-run and constructs no execution dependency", asyn
     createExecutionDependencies() { constructed += 1; throw new Error("must not construct"); },
   });
   assert.equal(constructed, 0);
-  assert.match(output.join("\n"), /dry run; no Circle mutation/);
-  assert.match(output.join("\n"), /execution required: no/);
+  const summary = output.join("\n");
+  assert.match(summary, /dry run; no Circle mutation/);
+  assert.match(summary, /blockchain: ARC-TESTNET/);
+  assert.match(summary, new RegExp(`destination: ${destination}`));
+  assert.match(summary, /token address 0x3600000000000000000000000000000000000000/);
+  assert.match(summary, /amount: 1\.250000/);
+  assert.match(summary, /fee policy: dynamic fee level MEDIUM/);
+  assert.match(summary, /execution required: no/);
 });
 
 test("transfer accepts a valid destination and exact decimal amount", () => {
@@ -97,11 +103,56 @@ test("mocked transfer execution performs exactly one gateway call with the SDK r
     amount: ["1.250000"],
     destinationAddress: destination,
     tokenAddress: "0x3600000000000000000000000000000000000000",
+    blockchain: "ARC-TESTNET",
     fee: { type: "level", config: { feeLevel: "MEDIUM" } },
     idempotencyKey: testUuidV4,
   });
+  assert.equal((request as unknown as Record<string, unknown>).tokenId, undefined);
+  assert.notEqual((request as unknown as Record<string, unknown>).blockchain, undefined);
   assert.match(output.join("\n"), /mutation outcome: submitted/);
   assert.match(output.join("\n"), /not transaction finality/);
+});
+
+test("token-ID transfer uses tokenId without tokenAddress or blockchain", async () => {
+  let request: CreateTransferTransactionInput | undefined;
+  const mutationGateway: WalletTransferGateway = {
+    async submit(input) { request = input; return { transactionId, state: "INITIATED" }; },
+  };
+  await runWalletTransferCommand({
+    args: ["--destination", destination, "--amount", "1.250000", "--token-id", "circle-token:123", "--execute", "--idempotency-key", testUuidV4],
+    sourceAddress: wallet.address,
+    configuredWalletId: wallet.id,
+    createExecutionDependencies: () => ({ preflightGateway: preflightGateway(), mutationGateway }),
+  });
+  assert.deepEqual(request, {
+    walletId: wallet.id,
+    amount: ["1.250000"],
+    destinationAddress: destination,
+    tokenId: "circle-token:123",
+    fee: { type: "level", config: { feeLevel: "MEDIUM" } },
+    idempotencyKey: testUuidV4,
+  });
+  assert.equal((request as unknown as Record<string, unknown>).tokenAddress, undefined);
+  assert.equal((request as unknown as Record<string, unknown>).blockchain, undefined);
+});
+
+test("token-address builder cannot produce Circle's missing-token-blockchain rejection shape", async () => {
+  let request: CreateTransferTransactionInput | undefined;
+  const mutationGateway: WalletTransferGateway = {
+    async submit(input) { request = input; return { transactionId, state: "INITIATED" }; },
+  };
+  await runWalletTransferCommand({
+    args: [...transferDryArgs, "--execute", "--idempotency-key", testUuidV4],
+    sourceAddress: wallet.address,
+    configuredWalletId: wallet.id,
+    createExecutionDependencies: () => ({ preflightGateway: preflightGateway(), mutationGateway }),
+  });
+  const shape = request as unknown as Record<string, unknown>;
+  assert.equal(shape.tokenId, undefined);
+  assert.equal(shape.tokenAddress, "0x3600000000000000000000000000000000000000");
+  assert.equal(shape.blockchain, "ARC-TESTNET");
+  assert.notEqual(shape.blockchain, undefined);
+  assert.notEqual(shape.blockchain, "");
 });
 
 test("transfer never retries and timeout remains ambiguous with same-key recovery guidance", async () => {

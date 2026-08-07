@@ -144,7 +144,13 @@ Transfer amounts are exact plain decimal strings. Signs, exponent notation, zero
 The installed `@circle-fin/developer-controlled-wallets@10.8.0` transfer method is `createTransaction(CreateTransferTransactionInput)`. With the configured source selected by `walletId`, the request accepts exactly one of:
 
 - `tokenId`: Circle's system-generated token identifier; or
-- `tokenAddress`: the token's blockchain address. The wallet-ID branch does not accept a separate `blockchain` field, so local preflight establishes the wallet as `ARC-TESTNET` before future submission.
+- `tokenAddress`: the token's blockchain address, together with `blockchain: ARC-TESTNET`.
+
+The installed SDK declaration makes `blockchain` optional on its token-address
+token input and marks it incompatible with `walletId`, but Circle runtime
+validation requires the blockchain whenever `tokenId` is absent. Settle sends
+the canonical `ARC-TESTNET` value for the token-address branch. The token-ID
+branch omits `blockchain` and sends only `tokenId` as its token reference.
 
 Both forms are exposed because the installed SDK supports both. `--token-id` and `--token-address` are mutually exclusive. Native-token transfer semantics require Circle token metadata and should use the appropriate Circle token ID; this command does not invent an empty-address CLI convention or infer token IDs from symbols. Balance metadata may display Circle token IDs internally, but automatic resolution is deliberately avoided because symbols and alternate Arc USDC views are not a unique mutation identifier.
 
