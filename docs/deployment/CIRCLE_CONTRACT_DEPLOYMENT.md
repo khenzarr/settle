@@ -69,4 +69,22 @@ pnpm circle:contract:integrity
 
 This command builds the local artifact, then uses only read-only Arc Testnet JSON-RPC calls. It verifies the canonical chain, deployed runtime bytecode, official USDC and its 6 decimals, ABI-exposed role identifiers and grants, unpaused state, zero initial active escrow, and exact runtime equality after substituting the artifact-declared immutable USDC ranges. It submits no transaction, makes no Circle request, and performs no mutation.
 
-Complete `docs/deployment/DEPLOYMENT_EVIDENCE_TEMPLATE.md` with the IDs, transaction hash, address, ArcScan evidence, estimate, and integrity output. This proves deployment wiring and runtime integrity; it does not claim explorer or Circle source-code verification. Source verification remains `UNVERIFIED` until the separate verification task completes.
+Complete `docs/deployment/DEPLOYMENT_EVIDENCE_TEMPLATE.md` with the IDs, transaction hash, address, ArcScan evidence, estimate, and integrity output. This proves deployment wiring and runtime integrity independently from the ArcScan source-verification record below.
+
+### ArcScan source verification
+
+The canonical SettlementEscrow deployment on Arc Testnet is
+`0x3e438ae878a8dc02c83f5545047cbde33a4f795f`. Its source is fully verified on
+ArcScan using Foundry's Blockscout verifier flow. The public contract record is:
+
+<https://testnet.arcscan.app/address/0x3e438ae878a8dc02c83f5545047cbde33a4f795f>
+
+Reproducibility settings are Solidity `0.8.30`, optimizer disabled, and EVM
+version `osaka` (via-IR disabled). The source identifier used for verification
+was `src/SettlementEscrow.sol:SettlementEscrow`, with constructor signature
+`constructor(address,address,address,address,address)` and the canonical Arc
+Testnet USDC followed by administrator, operator, arbitrator, and pauser
+addresses. ArcScan reports the contract name `SettlementEscrow`, compiler
+`v0.8.30+commit.73712a01`, `is_verified: true`, and
+`is_fully_verified: true`. Source verification establishes transparency and
+reproducibility; it is not a security audit.
