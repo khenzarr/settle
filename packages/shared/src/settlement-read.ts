@@ -43,6 +43,7 @@ const erc20BalanceOfAbi = [{
   inputs: [{ name: "account", type: "address" }],
   outputs: [{ name: "", type: "uint256" }],
 }] as const;
+const erc20AllowanceAbi = [{ type: "function", name: "allowance", stateMutability: "view", inputs: [{ name: "owner", type: "address" }, { name: "spender", type: "address" }], outputs: [{ name: "", type: "uint256" }] }] as const;
 
 export type SettlementReadErrorCode =
   | "INVALID_CONFIGURATION"
@@ -156,6 +157,7 @@ export interface SettlementEscrowReader {
   readSettlementSplits(orderId: string): Promise<SettlementSplitsReadResult>;
   readTotalActiveEscrow(): Promise<bigint>;
   readUsdcBalance(account?: string): Promise<bigint>;
+  readUsdcAllowance(owner: string, spender?: string): Promise<bigint>;
   readSettlementOrderProjection(orderId: string): Promise<SettlementOrderProjectionResult>;
 }
 
@@ -400,6 +402,21 @@ export function createSettlementEscrowReader(config: SettlementEscrowReaderConfi
         throw new SettlementReadError("ABI_DECODE_FAILURE", "Unable to decode USDC balanceOf result", { cause });
       }
       return nonNegativeBigint(result, "USDC balance");
+    },
+
+    async readUsdcAllowance(owner, spender = settlementEscrowAddress) {
+      const parsedOwner = canonicalAddress(owner);
+      const parsedSpender = canonicalAddress(spender, true);
+      await assertChain();
+      const data = encodeFunctionData({ abi: erc20AllowanceAbi, functionName: "allowance", args: [abiAddress(parsedOwner), abiAddress(parsedSpender)] });
+      let result: unknown;
+      try {
+        result = decodeFunctionResult({ abi: erc20AllowanceAbi, functionName: "allowance", data: await call(usdcAddress, data) });
+      } catch (cause) {
+        if (cause instanceof SettlementReadError) throw cause;
+        throw new SettlementReadError("ABI_DECODE_FAILURE", "Unable to decode USDC allowance result", { cause });
+      }
+      return nonNegativeBigint(result, "USDC allowance");
     },
 
     async readSettlementOrderProjection(value) {

@@ -153,6 +153,7 @@ async function run(patch: Partial<State> = {}) {
       if (normalized === RECIPIENT_B) return state.recipientBUsdc;
       throw new Error(`unexpected balance account ${account}`);
     },
+    async readUsdcAllowance() { return state.allowance; },
     async readSettlementOrderProjection() { throw new Error("not used"); },
   };
   const arcReader: MarketplaceArcReadGateway = {
