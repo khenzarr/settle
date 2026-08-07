@@ -1,6 +1,6 @@
 export { createCircleContractsClient, createDeveloperControlledWalletsClient } from "./client.ts";
-export { CIRCLE_CREDENTIAL_ENV_NAMES, CIRCLE_ENV_NAMES, CIRCLE_ROLE_ENV_NAMES, CircleConfigError, findPublicCircleCredentialNames, getCircleConfigPresence, parseCircleClientConfig, parseCircleDeploymentConfig, parseCircleDeploymentReferences, parseCircleWalletReferences, parseUuidV4, readNonEmptyEnvironmentValue } from "./config.ts";
-export type { CircleClientConfig, CircleDeploymentConfig, CircleDeploymentReferences, CircleEnvironmentName, CircleWalletReferences, EnvironmentValues } from "./config.ts";
+export { CIRCLE_CREDENTIAL_ENV_NAMES, CIRCLE_ENV_NAMES, CIRCLE_ROLE_ENV_NAMES, CircleConfigError, findPublicCircleCredentialNames, getCircleConfigPresence, parseCircleClientConfig, parseCircleDeploymentConfig, parseCircleDeploymentReferences, parseCircleMutationWalletConfig, parseCircleWalletReferences, parseUuidV4, readNonEmptyEnvironmentValue } from "./config.ts";
+export type { CircleClientConfig, CircleDeploymentConfig, CircleDeploymentReferences, CircleEnvironmentName, CircleMutationWalletConfig, CircleWalletReferences, EnvironmentValues } from "./config.ts";
 export { SETTLEMENT_ESCROW_ARTIFACT_PATH, SETTLEMENT_ESCROW_CONTRACT_DESCRIPTION, SETTLEMENT_ESCROW_CONTRACT_NAME, createCanonicalDeploymentRequest, createPublicationSafeDeploymentSummary, deriveConstructorSignature, prepareSettlementEscrowDeployment } from "./contracts.ts";
 export type { CircleContractDeploymentPreparation, PublicationSafeDeploymentSummary } from "./contracts.ts";
 export { estimateDeployment, formatDeploymentPlan, formatDeploymentSubmission, formatSafeFeeEstimate, getContractStatus, getTransactionStatus, parseDeploymentCommandArguments, runDeploymentCommand, submitDeployment } from "./contract-deployment.ts";
@@ -14,3 +14,9 @@ export { CIRCLE_ARC_TESTNET_BLOCKCHAIN, CIRCLE_DEPLOYER_ACCOUNT_TYPE, createCirc
 export type { CircleWalletGateway, CircleWalletRecord, DeployerWalletPlan, ExecuteDeployerWalletInput, PublicationSafeWalletMetadata } from "./wallets.ts";
 export { ARC_TESTNET_USDC_TOKEN_ADDRESS, DEFAULT_TRANSACTION_PAGE_SIZE, MAX_TRANSACTION_PAGE_SIZE, createCircleWalletReadOnlyGateway, formatWalletBalances, formatWalletInfo, formatWalletTransactions, getConfiguredWalletBalances, getConfiguredWalletInfo, getConfiguredWalletTransactions, parseSingleValueOption, parseTransactionPageSize } from "./wallet-operations.ts";
 export type { CircleWalletBalanceRecord, CircleWalletReadOnlyGateway, CircleWalletTransactionRecord, SafeWalletBalance, SafeWalletInfo, SafeWalletTransaction } from "./wallet-operations.ts";
+export { CircleMutationAmbiguousError, CircleMutationRecoveryRequiredError, CircleMutationRejectedError, executeCircleMutationSubmission, formatMutationSubmission, parseMutationExecutionGate, validateSubmissionResult } from "./wallet-mutations.ts";
+export type { CircleMutationFeeLevel, CircleMutationOutcome, MutationSubmissionResult } from "./wallet-mutations.ts";
+export { createCircleWalletTransferGateway, formatWalletTransferPlan, parseWalletTransferArguments, prepareWalletTransfer, runWalletTransferCommand } from "./wallet-transfer.ts";
+export type { TransferTokenReference, WalletTransferArguments, WalletTransferGateway, WalletTransferPlan } from "./wallet-transfer.ts";
+export { createCircleWalletContractExecutionGateway, formatWalletContractExecutionPlan, parseWalletContractExecutionArguments, prepareWalletContractExecution, runWalletContractExecutionCommand } from "./wallet-contract-execution.ts";
+export type { WalletContractExecutionArguments, WalletContractExecutionGateway, WalletContractExecutionPlan } from "./wallet-contract-execution.ts";

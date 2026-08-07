@@ -95,6 +95,8 @@ Foundry remains an independent simulation and fallback path. `pnpm contracts:dep
 - `pnpm circle:config:check` — reports presence or absence without values or API calls.
 - `pnpm circle:wallet:plan` — prints a dry-run reuse/create plan without SDK initialization.
 - `pnpm circle:wallet:create` — remains a dry run unless `-- --execute` is supplied.
+- `pnpm circle:wallet:send` — prepares a guarded wallet transfer and defaults to dry run.
+- `pnpm circle:wallet:contract-call` — prepares a generic guarded contract execution and defaults to dry run.
 - `pnpm circle:contract:prepare` — builds/checks the artifact and prints a publication-safe preparation summary without submission.
 - `pnpm circle:contract:estimate` — performs wallet preflight and a non-mutating Circle fee estimate.
 - `pnpm circle:contract:deploy` — prints a dry-run plan; mutates only with explicit execution safeguards.
@@ -110,8 +112,60 @@ The following operator commands inspect the configured Circle Developer-Controll
 
 Circle wallet history and balances have the scope and completeness guarantees of Circle's indexed API; these commands are not a complete chain indexer. If a future reward token is not surfaced by Circle's balance index, that does not prove the onchain balance is zero. A later read-only token-address-specific Arc RPC fallback may be added if needed; this phase does not build a general-purpose token indexer.
 
+### Guarded wallet mutations
+
+`pnpm circle:wallet:send` and `pnpm circle:wallet:contract-call` are the generic primitives through which the configured Developer-Controlled Wallet can later move assets or execute contracts without exposing a raw EVM private key. They are not SettlementEscrow-specific commands and do not implement release, refund, pause, or role operations.
+
+#### Dry run
+
+Dry run is the default. It parses every argument, validates the configured public wallet address, and prints a publication-safe plan without constructing a Circle SDK client, reading Circle credentials, calling wallet preflight, generating an idempotency key, or calling a Circle mutation endpoint.
+
+```sh
+pnpm circle:wallet:send -- \
+  --destination <non-zero-evm-address> \
+  --amount 1.25 \
+  --token-address <non-zero-evm-token-address> \
+  --fee-level MEDIUM
+
+pnpm circle:wallet:contract-call -- \
+  --contract <non-zero-evm-contract-address> \
+  --function 'transfer(address,uint256)' \
+  --parameters '["<recipient-address>","1000000"]' \
+  --fee-level MEDIUM
+```
+
+Transfer amounts are exact plain decimal strings. Signs, exponent notation, zero, negative values, leading-zero ambiguity, and floating-point conversion are rejected. Contract parameters are a JSON array of SDK-supported strings, safe integers, booleans, or nested arrays. Large integer ABI values should be quoted as strings. Normal contract-call output prints the function signature and parameter count, not the raw parameter array or calldata.
+
+The installed `@circle-fin/developer-controlled-wallets@10.8.0` transfer method is `createTransaction(CreateTransferTransactionInput)`. With the configured source selected by `walletId`, the request accepts exactly one of:
+
+- `tokenId`: Circle's system-generated token identifier; or
+- `tokenAddress`: the token's blockchain address. The wallet-ID branch does not accept a separate `blockchain` field, so local preflight establishes the wallet as `ARC-TESTNET` before future submission.
+
+Both forms are exposed because the installed SDK supports both. `--token-id` and `--token-address` are mutually exclusive. Native-token transfer semantics require Circle token metadata and should use the appropriate Circle token ID; this command does not invent an empty-address CLI convention or infer token IDs from symbols. Balance metadata may display Circle token IDs internally, but automatic resolution is deliberately avoided because symbols and alternate Arc USDC views are not a unique mutation identifier.
+
+The installed contract method is `createContractExecutionTransaction(CreateContractExecutionTransactionInput)`. It natively supports either ABI function signature plus ABI parameters, or raw calldata. Settle selects the native ABI mode (`--function` plus `--parameters`) so no calldata is hand-built and no additional web3 encoder dependency is needed. Optional `--amount` is a non-negative plain decimal native-token value for payable calls; operators should omit it for non-payable calls.
+
+Both SDK methods require a `fee` configuration. The CLI exposes the SDK's dynamic `LOW`, `MEDIUM`, or `HIGH` fee levels and defaults to `MEDIUM`. The installed SDK also supports absolute EIP-1559 values and gas-price configuration, but those are intentionally not exposed without a coupled estimate workflow.
+
+#### Execution
+
+Future execution requires both controls in the same invocation:
+
+```sh
+pnpm circle:wallet:send -- <transfer-arguments> --execute --idempotency-key <caller-generated-uuid-v4>
+pnpm circle:wallet:contract-call -- <contract-arguments> --execute --idempotency-key <caller-generated-uuid-v4>
+```
+
+The commands reject `--execute` without a UUIDv4 key, a key without `--execute`, duplicate flags, unknown flags, and missing flag values. They never generate a key and never print it. Execution constructs the SDK client only after all local input validation, then reuses the existing configured-wallet preflight to require the matching wallet ID, public address, `ARC-TESTNET`, `EOA`, developer custody, and live state. One invocation calls its mutation gateway at most once and performs no automatic retry.
+
+Although the high-level SDK input marks `idempotencyKey` optional and can generate one when omitted, the underlying generated mutation request requires UUIDv4 and documents that reuse returns the original response. Settle deliberately makes the caller-supplied UUIDv4 mandatory. If submission fails ambiguously, preserve the SAME idempotency key and diagnose the existing request before any retry; never create a replacement key merely because the first result was unclear.
+
+A successful submission response must contain a structurally valid transaction UUID and state. Acceptance is never described as finality. `getTransaction({ id })` is the installed retrieval method for later status confirmation and exposes state plus transaction hash when available; controlled status confirmation belongs to D3B3B2.
+
+D3B3B1 implemented and tested this mutation tooling entirely through mocked gateways. It did NOT perform a live asset transfer or contract execution. Live testnet proof belongs to D3B3B2.
+
 ## Long-term wallet access
 
-The Circle Developer-Controlled Wallet does not expose a conventional raw EVM private key. Normal wallet control is provided through Circle's Developer-Controlled Wallet infrastructure and authenticated server-side operations. Settle's read-only operator surface provides durable access to wallet metadata, balances, and inbound/outbound transaction history without exporting a raw private key. A future D3B3B mutation layer will add separately guarded transfers and contract execution controls.
+The Circle Developer-Controlled Wallet does not expose a conventional raw EVM private key. Normal wallet control is provided through Circle's Developer-Controlled Wallet infrastructure and authenticated server-side operations. Settle's read-only operator surface provides durable access to wallet metadata, balances, and inbound/outbound transaction history without exporting a raw private key. The guarded mutation foundation above adds separately controlled transfer and generic contract-execution preparation while preserving dry run as the default.
 
 Live Circle mutations are not part of `pnpm validate`.

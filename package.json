@@ -24,6 +24,8 @@
     "circle:wallet:info": "pnpm --filter @settle/circle wallet:info",
     "circle:wallet:balances": "pnpm --filter @settle/circle wallet:balances",
     "circle:wallet:transactions": "pnpm --filter @settle/circle wallet:transactions",
+    "circle:wallet:send": "pnpm --filter @settle/circle wallet:send",
+    "circle:wallet:contract-call": "pnpm --filter @settle/circle wallet:contract-call",
     "circle:contract:prepare": "pnpm contracts:abi:check && pnpm --filter @settle/circle contract:prepare",
     "circle:contract:estimate": "pnpm contracts:abi:check && pnpm --filter @settle/circle contract:estimate",
     "circle:contract:deploy": "pnpm contracts:abi:check && pnpm --filter @settle/circle contract:deploy",

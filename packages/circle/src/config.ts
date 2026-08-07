@@ -31,6 +31,11 @@ export interface CircleWalletReferences {
   readonly deployerWalletId?: string;
 }
 
+export interface CircleMutationWalletConfig {
+  readonly deployerWalletId: string;
+  readonly deployerAddress: EvmAddress;
+}
+
 export interface CircleDeploymentConfig {
   readonly deployerWalletId: string;
   readonly deployerAddress: EvmAddress;
@@ -101,6 +106,19 @@ export function parseCircleWalletReferences(values: EnvironmentValues): CircleWa
     ...(walletSetId === undefined ? {} : { walletSetId }),
     ...(deployerWalletId === undefined ? {} : { deployerWalletId }),
   };
+}
+
+export function parseCircleMutationWalletConfig(values: EnvironmentValues): CircleMutationWalletConfig {
+  const deployerWalletId = readNonEmptyEnvironmentValue(values, "CIRCLE_DEPLOYER_WALLET_ID");
+  const deployerAddress = readNonEmptyEnvironmentValue(values, "CIRCLE_DEPLOYER_ADDRESS");
+  const missingFields = [
+    ...(deployerWalletId === undefined ? ["CIRCLE_DEPLOYER_WALLET_ID"] : []),
+    ...(deployerAddress === undefined ? ["CIRCLE_DEPLOYER_ADDRESS"] : []),
+  ];
+  if (missingFields.length > 0) {
+    throw new CircleConfigError(`Missing required Circle wallet fields: ${missingFields.join(", ")}`, missingFields);
+  }
+  return { deployerWalletId: nonEmptyStringSchema.parse(deployerWalletId), deployerAddress: parseAddress(deployerAddress) };
 }
 
 export function parseCircleDeploymentConfig(values: EnvironmentValues): CircleDeploymentConfig {
