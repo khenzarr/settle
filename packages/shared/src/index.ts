@@ -14,3 +14,7 @@ export { ZERO_ADDRESS, ZERO_BYTES32, bytes32Schema, evmAddressSchema, nonZeroEvm
 export type { Bytes32, EvmAddress, OrderId, TermsHash, TransactionHash } from "./schemas.ts";
 export { calculateSettlementPayouts, settlementSplitSchema, settlementSplitsSchema, validateSettlementSplits } from "./settlement.ts";
 export type { SettlementSplit } from "./settlement.ts";
+export { SETTLEMENT_ORDER_EVENT_KINDS, decodeSettlementOrderEvent } from "./settlement-events.ts";
+export type { SettlementEventLog, SettlementOrderEvent, SettlementOrderEventKind } from "./settlement-events.ts";
+export { SettlementReadError, createHttpSettlementRpcTransport, createSettlementEscrowReader } from "./settlement-read.ts";
+export type { NormalizedOrderTimestamps, RawSettlementOrder, SettlementEscrowReader, SettlementEscrowReaderConfig, SettlementOrderProjection, SettlementOrderProjectionResult, SettlementOrderReadResult, SettlementPayoutProjection, SettlementReadErrorCode, SettlementRpcTransport, SettlementSplitsReadResult } from "./settlement-read.ts";

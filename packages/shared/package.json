@@ -7,9 +7,10 @@
   "exports": "./src/index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --test src/index.test.ts src/abi/SettlementEscrow.test.ts"
+    "test": "node --test src/index.test.ts src/settlement-read.test.ts src/abi/SettlementEscrow.test.ts"
   },
   "dependencies": {
+    "viem": "^2.55.11",
     "zod": "4.4.3"
   },
   "devDependencies": {
