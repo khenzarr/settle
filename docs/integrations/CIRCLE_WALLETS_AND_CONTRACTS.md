@@ -171,9 +171,29 @@ The commands reject `--execute` without a UUIDv4 key, a key without `--execute`,
 
 Although the high-level SDK input marks `idempotencyKey` optional and can generate one when omitted, the underlying generated mutation request requires UUIDv4 and documents that reuse returns the original response. Settle deliberately makes the caller-supplied UUIDv4 mandatory. If submission fails ambiguously, preserve the SAME idempotency key and diagnose the existing request before any retry; never create a replacement key merely because the first result was unclear.
 
-A successful submission response must contain a structurally valid transaction UUID and state. Acceptance is never described as finality. `getTransaction({ id })` is the installed retrieval method for later status confirmation and exposes state plus transaction hash when available; controlled status confirmation belongs to D3B3B2.
+A successful submission response must contain a structurally valid transaction UUID and state. Acceptance is never described as finality. `getTransaction({ id })` is the installed retrieval method for later status confirmation and exposes state plus transaction hash when available.
 
-D3B3B1 implemented and tested this mutation tooling entirely through mocked gateways. It did NOT perform a live asset transfer or contract execution. Live testnet proof belongs to D3B3B2.
+#### Verified live outbound transfer
+
+D3B3B1 implemented and tested this mutation tooling entirely through mocked gateways. Dry-run support remains the default and does not submit a transaction. The following controlled D3B3B2A2 live proof used exactly one mutation submission with no automatic retry. It is recorded here as integration evidence; no idempotency key or secret is recorded.
+
+- Operation: outbound transfer on `ARC-TESTNET`
+- Circle transaction ID: `52742ef5-876b-52a6-a1a7-67286c79513e`
+- Circle state progression: `INITIATED` -> `SENT` -> `COMPLETE`
+- Transferred amount: `0.010000 USDC`
+- Circle-reported network fee: `0.00196119035`
+- Source: `0x4ac8d35f1795531f1e0bef3826db5aab730fcd34`
+- Destination: `0x0b943fe9f1f8135e0751ba8b43dc0cd688ad209d`
+- Canonical USDC: `0x3600000000000000000000000000000000000000`
+- Arc transaction hash: `0x4a3bdf62bcbdfe44dbc71d920f5e8fc10efcba254173481abadeb7cdbd9c7b8c`
+- Arc block: `55816895`
+- ArcScan: <https://testnet.arcscan.app/tx/0x4a3bdf62bcbdfe44dbc71d920f5e8fc10efcba254173481abadeb7cdbd9c7b8c>
+
+Circle-reported `COMPLETE` is the recorded Circle finality state. Independent Arc RPC verification also confirmed a successful transaction receipt, the canonical USDC `Transfer` event, and matching source, destination, and amount. This onchain proof is separate from Circle submission and status reporting.
+
+The source balance view changed from `19.902646 USDC` to `19.890685 USDC`, while the recipient changed from `1042.841524 USDC` to `1042.851524 USDC`. The observed recipient delta was `+0.010000 USDC`; the observed source debit at 6-decimal token-accounting precision was `0.011961 USDC`. The source debit can exceed the transferred token amount because Arc network fees are paid from the same USDC-denominated balance view. The debit should not be treated as an exact 6-decimal rendering of transfer amount plus the separately reported fee.
+
+The corrected token-address request included `blockchain: ARC-TESTNET`. Circle runtime requires this field when `tokenAddress` is used, even though the installed Developer-Controlled Wallets SDK 10.8.0 typing permits its omission in that token input. The earlier request was rejected by Circle with HTTP 400 before transaction creation because it omitted `blockchain`; it created no transaction and moved no funds.
 
 ## Long-term wallet access
 
