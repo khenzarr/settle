@@ -14,6 +14,8 @@ export { ZERO_ADDRESS, ZERO_BYTES32, bytes32Schema, evmAddressSchema, nonZeroEvm
 export type { Bytes32, EvmAddress, OrderId, TermsHash, TransactionHash } from "./schemas.ts";
 export { calculateSettlementPayouts, settlementSplitSchema, settlementSplitsSchema, validateSettlementSplits } from "./settlement.ts";
 export type { SettlementSplit } from "./settlement.ts";
+export { MARKETPLACE_COMMAND_ABI_SIGNATURES, MarketplaceSignerKind, createApproveUsdcPlan, createCreateOrderPlan, createFundOrderPlan, createReleaseOrderPlan } from "./settlement-command-plan.ts";
+export type { ApproveUsdcCommandPlan, ApproveUsdcPlanInput, CreateOrderCommandPlan, CreateOrderPlanInput, FundOrderCommandPlan, FundOrderPlanInput, MarketplaceCommandChain, MarketplaceCommandPlan, MarketplaceCommandPrerequisite, MarketplaceOperationKind, MarketplaceSignerKind as MarketplaceSignerKindValue, MarketplaceSignerRequirement, MarketplaceStateTransition, MarketplaceStoredOrderInput, MarketplaceUsdcEffect, ReleaseOrderCommandPlan, ReleaseOrderPlanInput } from "./settlement-command-plan.ts";
 export { SETTLEMENT_ORDER_EVENT_KINDS, decodeSettlementOrderEvent } from "./settlement-events.ts";
 export type { SettlementEventLog, SettlementOrderEvent, SettlementOrderEventKind } from "./settlement-events.ts";
 export { SettlementReadError, createHttpSettlementRpcTransport, createSettlementEscrowReader } from "./settlement-read.ts";
