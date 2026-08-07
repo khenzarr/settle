@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ARC_TESTNET, getExplorerTransactionUrl } from "@settle/shared";
 import { connectWallet, submitBuyerTransaction, switchToArcTestnet, type BuyerSubmissionResult, type Eip1193Provider, type WalletState } from "../lib/buyer-wallet-adapter";
 import type { BuyerOrderResponse, JsonIntent } from "../lib/buyer-order-intent-service";
+import type { BuyerConfirmationResponse } from "../lib/buyer-transaction-confirmation";
 
 declare global { interface Window { ethereum?: Eip1193Provider } }
 
@@ -15,9 +16,32 @@ export default function Home() {
   const [order, setOrder] = useState<BuyerOrderResponse | null>(null);
   const [approveSubmitted, setApproveSubmitted] = useState(false);
   const [result, setResult] = useState<BuyerSubmissionResult | null>(null);
+  const [confirmation, setConfirmation] = useState<BuyerConfirmationResponse | null>(null);
+  const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState("");
   const provider = () => { if (!window.ethereum) throw new Error("No injected EVM wallet found"); return window.ethereum; };
   async function run(action: () => Promise<void>) { setError(""); try { await action(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Wallet request failed"); } }
+  async function confirm(operation: "approve-usdc" | "fund-order", hash: string) {
+    setConfirming(true);
+    try {
+      for (let attempt = 0; attempt < 6; attempt += 1) {
+        const response = await fetch("/api/buyer/transaction/confirm", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ orderId, transactionHash: hash, operation }) });
+        const body = await response.json() as BuyerConfirmationResponse | { error?: { message?: string } };
+        if (!response.ok) throw new Error("error" in body && body.error?.message ? body.error.message : "Unable to confirm transaction");
+        const next = body as BuyerConfirmationResponse;
+        setConfirmation(next);
+        if (next.confirmationStatus === "state-confirmed") {
+          if (operation === "approve-usdc") {
+            const refreshed = await fetch("/api/buyer/order", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ orderId }) });
+            if (refreshed.ok) { setOrder(await refreshed.json() as BuyerOrderResponse); setApproveSubmitted(false); }
+          }
+          break;
+        }
+        if (next.confirmationStatus === "reverted" || attempt === 5) break;
+        await new Promise<void>((resolve) => setTimeout(resolve, 2_000));
+      }
+    } finally { setConfirming(false); }
+  }
 
   return <main>
     <p className="eyebrow">D4B buyer execution proof</p><h1>Settle wallet adapter</h1>
@@ -33,13 +57,13 @@ export default function Home() {
       <button onClick={() => run(async () => { const response = await fetch("/api/buyer/order", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ orderId }) }); const body = await response.json() as BuyerOrderResponse | { error?: { message?: string } }; if (!response.ok) throw new Error("error" in body && body.error?.message ? body.error.message : "Unable to load order"); setOrder(body as BuyerOrderResponse); setApproveSubmitted(false); })}>Load order</button>
       {order && <><dl><dt>Buyer</dt><dd>{order.buyer}</dd><dt>Amount</dt><dd>{order.amount.usdc} USDC ({order.amount.baseUnits} base units)</dd><dt>Status</dt><dd>{order.statusLabel}</dd><dt>Deadline</dt><dd>{order.fundingDeadline} ({order.fundingDeadlineOpen ? "open" : "expired"})</dd><dt>Allowance</dt><dd>{order.allowance.usdc} USDC ({order.allowance.baseUnits} base units)</dd></dl>
       <IntentPreview title="Approve operation preview" intent={order.approveIntent} />
-      <button disabled={!wallet.account || approveSubmitted} onClick={() => run(async () => { const submission = await submitBuyerTransaction(executableIntent(order.approveIntent), provider()); setResult(submission); setApproveSubmitted(true); })}>Approve</button>
+      <button disabled={!wallet.account || approveSubmitted} onClick={() => run(async () => { const submission = await submitBuyerTransaction(executableIntent(order.approveIntent), provider()); setResult(submission); setApproveSubmitted(true); setConfirmation(null); await confirm("approve-usdc", submission.hash); })}>Approve</button>
       <IntentPreview title="Fund operation preview" intent={order.fundIntent} />
-      <button disabled={!wallet.account || !order.fundReady || approveSubmitted} onClick={() => run(async () => setResult(await submitBuyerTransaction(executableIntent(order.fundIntent), provider())))}>Fund</button>
-      {approveSubmitted && <p>Approval submitted/not finalized. Refresh order state before Fund can become enabled.</p>}
+       <button disabled={!wallet.account || !order.fundReady || approveSubmitted} onClick={() => run(async () => { const submission = await submitBuyerTransaction(executableIntent(order.fundIntent), provider()); setResult(submission); setConfirmation(null); await confirm("fund-order", submission.hash); })}>Fund</button>
+       {approveSubmitted && <p>Approval submitted — not confirmed. Fund stays disabled until canonical allowance is refreshed and sufficient.</p>}
       <button className="secondary" onClick={() => run(async () => { const response = await fetch("/api/buyer/order", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ orderId }) }); const body = await response.json() as BuyerOrderResponse; if (!response.ok) throw new Error("Unable to refresh order"); setOrder(body); setApproveSubmitted(false); })}>Refresh order state</button></>}
     </section>
-    {result && <section><h2>Submitted (not finalized)</h2><a href={getExplorerTransactionUrl(result.hash as `0x${string}`)} target="_blank" rel="noreferrer">{result.hash}</a></section>}
+    {result && <section><h2>{confirming ? "Submitted — not confirmed" : "Transaction confirmation"}</h2><a href={getExplorerTransactionUrl(result.hash as `0x${string}`)} target="_blank" rel="noreferrer">{result.hash}</a>{confirmation && <><p>{confirmation.confirmationStatus}</p>{confirmation.orderStatus && <p>Canonical order status: {confirmation.orderStatus}{confirmation.operation === "fund-order" && confirmation.stateConfirmed ? " — funded, not settled" : ""}</p>}{confirmation.allowance && <p>Allowance: {confirmation.allowance} / {confirmation.requiredAmount}</p>}<p>{confirmation.stateConfirmed ? "On-chain state confirmed" : "Receipt alone is not success"}</p><button className="secondary" disabled={confirming} onClick={() => run(() => confirm(confirmation.operation, confirmation.transactionHash))}>Retry confirmation</button></>}</section>}
     {error && <p className="error" role="alert">{error}</p>}
   </main>;
 }

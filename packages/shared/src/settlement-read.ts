@@ -25,6 +25,7 @@ import {
   nonZeroEvmAddressSchema,
   normalizeAddress,
   orderIdSchema,
+  transactionHashSchema,
   termsHashSchema,
   type EvmAddress,
   type OrderId,
@@ -67,7 +68,15 @@ export class SettlementReadError extends Error {
 }
 
 export interface SettlementRpcTransport {
-  request(method: "eth_chainId" | "eth_call", params: readonly unknown[]): Promise<unknown>;
+  request(method: string, params: readonly unknown[]): Promise<unknown>;
+}
+
+export interface SettlementTransactionReceipt {
+  transactionHash: string;
+  status: 0 | 1;
+  from: EvmAddress;
+  to: EvmAddress;
+  blockNumber: bigint;
 }
 
 export interface SettlementEscrowReaderConfig {
@@ -158,6 +167,7 @@ export interface SettlementEscrowReader {
   readTotalActiveEscrow(): Promise<bigint>;
   readUsdcBalance(account?: string): Promise<bigint>;
   readUsdcAllowance(owner: string, spender?: string): Promise<bigint>;
+  readonly readTransactionReceipt?: (hash: string) => Promise<SettlementTransactionReceipt | null>;
   readSettlementOrderProjection(orderId: string): Promise<SettlementOrderProjectionResult>;
 }
 
@@ -278,7 +288,7 @@ export function createHttpSettlementRpcTransport(rpcUrl: string, fetcher: typeof
 
   let nextId = 1;
   return Object.freeze({
-    async request(method: "eth_chainId" | "eth_call", params: readonly unknown[]): Promise<unknown> {
+    async request(method: "eth_chainId" | "eth_call" | "eth_getTransactionReceipt", params: readonly unknown[]): Promise<unknown> {
       let response: Response;
       try {
         response = await fetcher(url, {
@@ -325,7 +335,7 @@ export function createSettlementEscrowReader(config: SettlementEscrowReaderConfi
     throw new SettlementReadError("INVALID_CONFIGURATION", "Expected chain ID must be a positive safe integer");
   }
 
-  async function request(method: "eth_chainId" | "eth_call", params: readonly unknown[]): Promise<unknown> {
+  async function request(method: "eth_chainId" | "eth_call" | "eth_getTransactionReceipt", params: readonly unknown[]): Promise<unknown> {
     try {
       return await config.transport.request(method, params);
     } catch (cause) {
@@ -417,6 +427,31 @@ export function createSettlementEscrowReader(config: SettlementEscrowReaderConfi
         throw new SettlementReadError("ABI_DECODE_FAILURE", "Unable to decode USDC allowance result", { cause });
       }
       return nonNegativeBigint(result, "USDC allowance");
+    },
+
+    async readTransactionReceipt(hash): Promise<SettlementTransactionReceipt | null> {
+      const requestedHash = transactionHashSchema.parse(hash).toLowerCase();
+      await assertChain();
+      const value = await request("eth_getTransactionReceipt", [requestedHash]);
+      if (value === null) return null;
+      if (typeof value !== "object" || value === null || Array.isArray(value)) {
+        throw new SettlementReadError("MALFORMED_RPC_RESPONSE", "Transaction receipt must be an object or null");
+      }
+      const receipt = value as Record<string, unknown>;
+      const receiptHash = transactionHashSchema.safeParse(receipt.transactionHash);
+      if (!receiptHash.success || receiptHash.data.toLowerCase() !== requestedHash) {
+        throw new SettlementReadError("MALFORMED_RPC_RESPONSE", "Transaction receipt hash does not match requested hash");
+      }
+      const status = rpcQuantity(receipt.status, "receipt status");
+      if (status !== 0n && status !== 1n) throw new SettlementReadError("MALFORMED_RPC_RESPONSE", "Receipt status must be 0x0 or 0x1");
+      const blockNumber = rpcQuantity(receipt.blockNumber, "receipt blockNumber");
+      return {
+        transactionHash: receiptHash.data.toLowerCase(),
+        status: status === 1n ? 1 : 0,
+        from: canonicalAddress(receipt.from, true),
+        to: canonicalAddress(receipt.to, true),
+        blockNumber,
+      };
     },
 
     async readSettlementOrderProjection(value) {

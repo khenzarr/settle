@@ -258,6 +258,7 @@ test("reader API is frozen and exposes no mutation or signing behavior", () => {
     "readSettlementOrderProjection",
     "readSettlementSplits",
     "readTotalActiveEscrow",
+    "readTransactionReceipt",
     "readUsdcAllowance",
     "readUsdcBalance",
   ]);
