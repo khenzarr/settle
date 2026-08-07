@@ -14,8 +14,13 @@ export interface SafeFeeEstimate {
   readonly sourceWalletAddress: string;
   readonly feeLevel: "MEDIUM";
   readonly gasLimit?: string;
-  readonly estimatedNetworkFee?: string;
-  readonly estimatedRawNetworkFee?: string;
+  readonly baseFee?: string;
+  readonly priorityFee?: string;
+  readonly maxFee?: string;
+  readonly gasPrice?: string;
+  readonly networkFee?: string;
+  readonly networkFeeRaw?: string;
+  readonly l1Fee?: string;
   readonly requestId?: string;
 }
 
@@ -109,18 +114,22 @@ export async function estimateDeployment(input: Readonly<{
     const response = await input.client.estimateContractDeploymentFee({
       walletId: input.preparation.deployerWalletId,
       bytecode: input.preparation.bytecode,
-      abiJson: JSON.stringify(input.preparation.abi),
       constructorSignature: input.preparation.constructorSignature,
       constructorParameters: [...input.preparation.constructorParameters],
     });
-    const fee = response.data?.medium;
+    const fee = isRecord(response.data?.medium) ? response.data.medium : undefined;
     return {
       blockchain: input.preparation.blockchain,
       sourceWalletAddress: input.preparation.deployerAddress,
       feeLevel: "MEDIUM",
-      ...(fee?.gasLimit === undefined ? {} : { gasLimit: fee.gasLimit }),
-      ...(fee?.networkFee === undefined ? {} : { estimatedNetworkFee: fee.networkFee }),
-      ...(fee?.networkFeeRaw === undefined ? {} : { estimatedRawNetworkFee: fee.networkFeeRaw }),
+      ...safeFeeField(fee, "gasLimit"),
+      ...safeFeeField(fee, "baseFee"),
+      ...safeFeeField(fee, "priorityFee"),
+      ...safeFeeField(fee, "maxFee"),
+      ...safeFeeField(fee, "gasPrice"),
+      ...safeFeeField(fee, "networkFee"),
+      ...safeFeeField(fee, "networkFeeRaw"),
+      ...safeFeeField(fee, "l1Fee"),
       ...safeRequestId(response),
     };
   });
@@ -218,4 +227,14 @@ function parseUuidV4(value: string): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object";
+}
+
+function safeFeeField<K extends keyof SafeFeeEstimate>(
+  fee: Record<string, unknown> | undefined,
+  key: K,
+): Readonly<Partial<Pick<SafeFeeEstimate, K>>> {
+  const value = fee?.[key];
+  return typeof value === "string" && value.length <= 200
+    ? { [key]: value } as Partial<Pick<SafeFeeEstimate, K>>
+    : {} as Partial<Pick<SafeFeeEstimate, K>>;
 }

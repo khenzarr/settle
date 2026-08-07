@@ -68,7 +68,9 @@ The canonical request derives its constructor signature from the generated ABI a
 
 Before estimate or submission, Circle's `getWallet` operation must return the configured wallet ID and address, `ARC-TESTNET`, and `EOA`. Developer custody and `LIVE` state are also required when those fields are exposed.
 
-`pnpm circle:contract:estimate` performs that preflight and then makes only Circle's non-mutating deployment-fee estimate request. The Circle request uses wallet-ID addressing: it includes `walletId` and omits `blockchain` and `sourceAddress`. Blockchain and source address remain in the local canonical model for validation and are retained in publication-safe operator output. It prints available medium-fee fields without ABI, bytecode, credentials, or a complete SDK response.
+`pnpm circle:contract:estimate` performs that preflight and then makes only Circle's non-mutating deployment-fee estimate request. Its exact request field set is `walletId`, bytecode, the ABI-derived constructor signature, and constructor parameters. It deliberately omits ABI JSON, blockchain, and source address because Circle treats `abiJson` and `constructorSignature` as mutually exclusive for this estimate operation. ABI, blockchain, and source address remain in the local canonical preparation model for validation, deployment, and publication-safe operator output.
+
+Estimate output includes only available normalized medium-fee fields and safe request metadata; absent optional network-fee fields do not fail. ABI, bytecode, credentials, and complete SDK responses are never printed. The real `deployContract` request remains unchanged and still includes ABI JSON, blockchain, wallet ID, bytecode, constructor parameters, and the `MEDIUM` fee level; it does not inherit the estimate-only ABI omission.
 
 `pnpm circle:contract:deploy` prints a publication-safe plan by default and does not initialize Circle clients. Submission requires:
 

@@ -58,3 +58,28 @@ test("unsafe Circle diagnostics are omitted rather than exposing request materia
   const serialized = JSON.stringify(error);
   assert.doesNotMatch(serialized, /header-secret|api-secret|secret-abi|0x6001|constructorParameters|requestBody/);
 });
+
+test("safe validation details retain messages and locations but never invalid values", () => {
+  const error = normalizeCircleError({
+    response: {
+      status: 400,
+      data: {
+        code: "invalid_request",
+        message: "Request validation failed",
+        errors: [
+          { location: ["body", "constructorSignature"], message: "Cannot be present with abiJson", invalidValue: "constructor(address,address,address,address,address)" },
+          { field: "abiJson", message: "Mutually exclusive field", invalidValue: "very-long-secret-abi" },
+          { field: "bytecode", message: "bytecode=0x6001" },
+        ],
+        requestId: "req-validation-1",
+      },
+    },
+  }, "estimateContractDeploymentFee");
+  assert.deepEqual(error.validationDetails, [
+    { field: "body.constructorSignature", message: "Cannot be present with abiJson" },
+    { field: "abiJson", message: "Mutually exclusive field" },
+  ]);
+  assert.match(error.message, /body\.constructorSignature: Cannot be present with abiJson/);
+  assert.match(error.message, /requestId=req-validation-1/);
+  assert.doesNotMatch(JSON.stringify(error), /constructor\(address|very-long-secret-abi|0x6001/);
+});

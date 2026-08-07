@@ -16,7 +16,9 @@ Estimate and execute mode retrieve the configured Circle wallet first. The recor
 pnpm circle:contract:estimate
 ```
 
-This is the only live operation that is non-mutating. The Circle estimate request uses wallet-ID addressing and sends `walletId`, bytecode, ABI JSON, the ABI-derived constructor signature, and constructor parameters. Blockchain and source address are validated through wallet preflight and retained for publication-safe operator output, but are omitted from the estimate API payload. The command uses fee level `MEDIUM` and prints only available safe fee and request metadata. It is intentionally not part of `pnpm validate`.
+This is the only live operation that is non-mutating. The Circle estimate request sends exactly `walletId`, bytecode, the ABI-derived constructor signature, and constructor parameters. It deliberately omits ABI JSON, blockchain, and source address. Circle treats `abiJson` and `constructorSignature` as mutually exclusive for this estimate operation. ABI, blockchain, and wallet address remain in the local preparation model for validation and publication-safe operator output.
+
+The command prints only available safe medium-fee and request metadata, including `gasLimit`, `baseFee`, `priorityFee`, `maxFee`, `gasPrice`, `networkFee`, `networkFeeRaw`, and `l1Fee` when Circle supplies them. It does not require either network-fee field and is intentionally not part of `pnpm validate`. The real deployment request remains separate: it still includes ABI JSON and does not inherit this estimate-only omission.
 
 ## 3. Review the dry-run plan
 

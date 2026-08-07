@@ -42,6 +42,10 @@ test("canonical deployment request contains the exact SDK payload", async () => 
   assert.deepEqual(request.fee, { type: "level", config: { feeLevel: "MEDIUM" } });
   assert.deepEqual(JSON.parse(request.abiJson), preparation.abi);
   assert.match(request.bytecode, /^0x[0-9a-f]+$/i);
+  assert.ok(Object.hasOwn(preparation, "abi"));
+  assert.ok(Object.hasOwn(request, "abiJson"));
+  assert.equal(Object.hasOwn(request, "constructorSignature"), false);
+  assert.deepEqual(Object.keys(request), ["name", "description", "blockchain", "walletId", "abiJson", "bytecode", "constructorParameters", "fee"]);
 });
 
 test("missing artifact is rejected", async () => {
