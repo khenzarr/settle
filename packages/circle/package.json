@@ -19,6 +19,7 @@
     "wallet:info": "node --env-file-if-exists=../../.env scripts/wallet-info.ts",
     "wallet:balances": "node --env-file-if-exists=../../.env scripts/wallet-balances.ts",
     "wallet:transactions": "node --env-file-if-exists=../../.env scripts/wallet-transactions.ts",
+    "wallet:transaction-status": "node --env-file-if-exists=../../.env scripts/wallet-transaction-status.ts",
     "wallet:send": "node --env-file-if-exists=../../.env scripts/wallet-send.ts",
     "wallet:contract-call": "node --env-file-if-exists=../../.env scripts/wallet-contract-call.ts",
     "contract:prepare": "node --env-file-if-exists=../../.env scripts/prepare-contract-deployment.ts",
