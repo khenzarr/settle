@@ -100,4 +100,18 @@ Foundry remains an independent simulation and fallback path. `pnpm contracts:dep
 - `pnpm circle:contract:deploy` — prints a dry-run plan; mutates only with explicit execution safeguards.
 - `pnpm circle:contract:status` — retrieves Circle contract and transaction state; `--wait` optionally polls.
 
+### Read-only wallet operations
+
+The following operator commands inspect the configured Circle Developer-Controlled Wallet and do not send funds, create transactions, execute contracts, deploy anything, call Circle mutation endpoints, or generate idempotency keys:
+
+- `pnpm circle:wallet:info` — retrieves and validates wallet metadata, including the `ARC-TESTNET` blockchain, public address, EOA account type, optional developer custody and live state, and an ArcScan address link. The wallet ID is used internally and is not printed.
+- `pnpm circle:wallet:balances` — lists all token balances indexed by Circle for the configured wallet. Use `-- --token-address <0x...>` for an address-specific query. Native USDC and the canonical ERC-20 USDC address `0x3600000000000000000000000000000000000000` are displayed as alternate views and are never added together. Circle-indexed reward tokens are retained when returned.
+- `pnpm circle:wallet:transactions` — lists the most recent 10 Circle transaction-history records for this wallet. Use `-- --page-size <1-50>` for a bounded alternative. The query is scoped by wallet ID and requests monitored and non-monitored records with `includeAll` where supported. Circle rejects combining its wallet-ID and blockchain filters, so the command validates every returned record as `ARC-TESTNET` locally instead of sending an incompatible filter combination.
+
+Circle wallet history and balances have the scope and completeness guarantees of Circle's indexed API; these commands are not a complete chain indexer. If a future reward token is not surfaced by Circle's balance index, that does not prove the onchain balance is zero. A later read-only token-address-specific Arc RPC fallback may be added if needed; this phase does not build a general-purpose token indexer.
+
+## Long-term wallet access
+
+The Circle Developer-Controlled Wallet does not expose a conventional raw EVM private key. Normal wallet control is provided through Circle's Developer-Controlled Wallet infrastructure and authenticated server-side operations. Settle's read-only operator surface provides durable access to wallet metadata, balances, and inbound/outbound transaction history without exporting a raw private key. A future D3B3B mutation layer will add separately guarded transfers and contract execution controls.
+
 Live Circle mutations are not part of `pnpm validate`.

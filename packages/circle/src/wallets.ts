@@ -27,7 +27,7 @@ export interface CircleWalletRecord {
 }
 
 export async function preflightDeployerWallet(input: Readonly<{
-  gateway: CircleWalletGateway;
+  gateway: Pick<CircleWalletGateway, "getWallet">;
   configuredWalletId: string;
   configuredAddress: EvmAddress;
 }>): Promise<PublicationSafeWalletMetadata> {

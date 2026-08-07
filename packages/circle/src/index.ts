@@ -12,3 +12,5 @@ export { checkSettlementIntegrity, formatSettlementIntegrityReport, parseSettlem
 export type { SettlementIntegrityConfig, SettlementIntegrityReport } from "./settlement-integrity.ts";
 export { CIRCLE_ARC_TESTNET_BLOCKCHAIN, CIRCLE_DEPLOYER_ACCOUNT_TYPE, createCircleWalletGateway, executeDeployerWalletPlan, planDeployerWallet, preflightDeployerWallet, validateArcTestnetWallet } from "./wallets.ts";
 export type { CircleWalletGateway, CircleWalletRecord, DeployerWalletPlan, ExecuteDeployerWalletInput, PublicationSafeWalletMetadata } from "./wallets.ts";
+export { ARC_TESTNET_USDC_TOKEN_ADDRESS, DEFAULT_TRANSACTION_PAGE_SIZE, MAX_TRANSACTION_PAGE_SIZE, createCircleWalletReadOnlyGateway, formatWalletBalances, formatWalletInfo, formatWalletTransactions, getConfiguredWalletBalances, getConfiguredWalletInfo, getConfiguredWalletTransactions, parseSingleValueOption, parseTransactionPageSize } from "./wallet-operations.ts";
+export type { CircleWalletBalanceRecord, CircleWalletReadOnlyGateway, CircleWalletTransactionRecord, SafeWalletBalance, SafeWalletInfo, SafeWalletTransaction } from "./wallet-operations.ts";

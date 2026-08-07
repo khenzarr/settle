@@ -165,7 +165,7 @@ function asSafeField(value: unknown): string | undefined {
 
 function asSafeValidationMessage(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
-  const sanitized = redactString(value).trim();
+  const sanitized = redactString(value).trim().replace(/\b[0-9a-f]{8}-[0-9a-f-]{27,}\b/gi, "[REDACTED]");
   if (sanitized.length === 0 || sanitized.length > 500 || /[\u0000-\u001f\u007f]/.test(sanitized)) return undefined;
   if (/authorization|entity[_ -]?secret|ciphertext|request\s*body/i.test(sanitized)) return undefined;
   const structuralProbe = sanitized.replaceAll("[REDACTED]", "");
