@@ -27,6 +27,7 @@
     "contract:deploy": "node --env-file-if-exists=../../.env scripts/deploy-contract.ts",
     "contract:status": "node --env-file-if-exists=../../.env scripts/check-contract-deployment.ts",
     "contract:integrity": "node --env-file-if-exists=../../.env scripts/check-settlement-integrity.ts",
+    "marketplace:preflight": "node --env-file-if-exists=../../.env scripts/preflight-marketplace-lifecycle.ts",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test": "node --test src/*.test.ts"
