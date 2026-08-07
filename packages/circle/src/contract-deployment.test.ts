@@ -79,7 +79,7 @@ test("explicit execution preflights and submits exactly once", async () => {
   assert.doesNotMatch(output.join("\n"), /0x6001|constructor|abiJson|idempotency/i);
 });
 
-test("deploy projects the canonical preparation into the exact wallet-ID SDK request and validates response IDs", async () => {
+test("deploy projects the canonical preparation into the exact wallet-ID and blockchain SDK request without compatibility casts", async () => {
   let calls = 0, request: unknown;
   const client = { async deployContract(input: unknown) { calls++; request = input; return { data: { contractId: "11111111-1111-4111-8111-111111111111", transactionId: "22222222-2222-4222-8222-222222222222" } }; } } as unknown as CircleSmartContractPlatformClient;
   const canonical = {
@@ -95,22 +95,24 @@ test("deploy projects the canonical preparation into the exact wallet-ID SDK req
   const idempotencyKey = "33333333-3333-4333-8333-333333333333";
   const result = await submitDeployment({ client, request: canonical, idempotencyKey });
   assert.equal(calls, 1);
-  assert.deepEqual(Object.keys(request as object), ["idempotencyKey", "name", "description", "walletId", "abiJson", "bytecode", "constructorParameters", "fee"]);
+  assert.deepEqual(Object.keys(request as object), ["idempotencyKey", "name", "description", "walletId", "blockchain", "abiJson", "bytecode", "constructorParameters", "fee"]);
   assert.equal(Object.hasOwn(request as object, "idempotencyKey"), true);
   assert.equal(Object.hasOwn(request as object, "name"), true);
   assert.equal(Object.hasOwn(request as object, "description"), true);
   assert.equal(Object.hasOwn(request as object, "walletId"), true);
+  assert.equal(Object.hasOwn(request as object, "blockchain"), true);
   assert.equal(Object.hasOwn(request as object, "abiJson"), true);
   assert.equal(Object.hasOwn(request as object, "bytecode"), true);
   assert.equal(Object.hasOwn(request as object, "constructorParameters"), true);
   assert.equal(Object.hasOwn(request as object, "fee"), true);
-  assert.equal(Object.hasOwn(request as object, "blockchain"), false);
   assert.equal(Object.hasOwn(request as object, "sourceAddress"), false);
   assert.equal(Object.hasOwn(request as object, "constructorSignature"), false);
   assert.equal((request as { idempotencyKey: string }).idempotencyKey, idempotencyKey);
   assert.equal((request as { name: string }).name, canonical.name);
   assert.equal((request as { description: string }).description, canonical.description);
   assert.equal((request as { walletId: string }).walletId, canonical.walletId);
+  assert.equal((request as { blockchain: string }).blockchain, canonical.blockchain);
+  assert.equal((request as { blockchain: string }).blockchain, "ARC-TESTNET");
   assert.equal((request as { abiJson: string }).abiJson, canonical.abiJson);
   assert.equal((request as { bytecode: string }).bytecode, canonical.bytecode);
   assert.deepEqual((request as { constructorParameters: readonly string[] }).constructorParameters, [...canonical.constructorParameters]);

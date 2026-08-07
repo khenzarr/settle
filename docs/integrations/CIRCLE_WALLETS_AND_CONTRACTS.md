@@ -4,7 +4,7 @@
 
 Settle uses Circle Developer-Controlled Wallets as the planned custody boundary for the Arc Testnet settlement deployment and initial operator activity. This foundation is server-only and does not place Circle credentials, entity-secret material, or signing material in browser code.
 
-The configured Arc Testnet EOA predates this change. The first live Circle `deployContract` attempt was explicitly rejected with HTTP 400 before returning a contract ID or transaction ID. No wallet or wallet set was created, no deployment was completed, and no Circle contract deployment was retried during this coding task. Contract deployment remains a dry-run unless the operator supplies both `--execute` and a caller-generated UUIDv4 idempotency key.
+The configured Arc Testnet EOA predates this change. Earlier deployment requests received explicit HTTP 400 responses. No contract or transaction IDs were returned, and no deployment was completed. Future diagnostics expose only safe Circle code, message, validation field, and request ID values when available. Contract deployment remains a dry-run unless the operator supplies both `--execute` and a caller-generated UUIDv4 idempotency key.
 
 ## Why the first wallet is an Arc Testnet EOA
 
@@ -68,11 +68,11 @@ The canonical local preparation derives its constructor signature from the gener
 
 Before estimate or submission, Circle's `getWallet` operation must return the configured wallet ID and address, `ARC-TESTNET`, and `EOA`. Developer custody and `LIVE` state are also required when those fields are exposed.
 
-`pnpm circle:contract:estimate` performs that preflight and then makes only Circle's non-mutating deployment-fee estimate request. In wallet-ID mode, its exact request field set is `walletId`, `bytecode`, the ABI-derived `constructorSignature`, and `constructorParameters`. It deliberately omits `abiJson`, `blockchain`, and `sourceAddress` because Circle treats `abiJson` and `constructorSignature` as mutually exclusive for this estimate operation.
+`pnpm circle:contract:estimate` performs that preflight and then makes only Circle's non-mutating deployment-fee estimate request. In its wallet-ID source mode, its exact request field set is `walletId`, `bytecode`, the ABI-derived `constructorSignature`, and `constructorParameters`. It deliberately omits `abiJson`, `blockchain`, and `sourceAddress` because Circle treats `abiJson` and `constructorSignature` as mutually exclusive for this estimate operation.
 
 Estimate output includes only available normalized medium-fee fields and safe request metadata; absent optional network-fee fields do not fail. ABI, bytecode, credentials, and complete SDK responses are never printed.
 
-The wallet-ID-mode `deployContract` request contains exactly `idempotencyKey`, `name`, `description`, `walletId`, `abiJson`, `bytecode`, `constructorParameters`, and `fee`. It omits `blockchain`, `sourceAddress`, and `constructorSignature`. Address-based source mode is a separate API shape that would use `blockchain` plus `sourceAddress` instead of `walletId`. Blockchain `ARC-TESTNET`, deployer wallet address and ID, ABI, bytecode, constructor parameters, MEDIUM fee level, and contract metadata remain in the canonical local validated preparation for wallet preflight, dry-run output, status validation, explorer links, and onchain verification. Blockchain is omitted only at both wallet-ID API boundaries.
+The wallet-ID `deployContract` request contains exactly `idempotencyKey`, `name`, `description`, `walletId`, `blockchain`, `abiJson`, `bytecode`, `constructorParameters`, and `fee`. Actual deploy uses `walletId` and `blockchain` together, and Arc Testnet deploys use the already validated canonical preparation value `ARC-TESTNET`. This wallet-ID deployment omits `sourceAddress` and `constructorSignature`. Estimate intentionally uses its separate wallet-ID source mode and omits `blockchain`; estimate and deploy have different schemas and must not be conflated. Deployer wallet address and ID, ABI, bytecode, constructor parameters, MEDIUM fee level, and contract metadata remain in the canonical local validated preparation for wallet preflight, dry-run output, status validation, explorer links, and onchain verification.
 
 `pnpm circle:contract:deploy` prints a publication-safe plan by default and does not initialize Circle clients. Submission requires:
 
@@ -80,7 +80,7 @@ The wallet-ID-mode `deployContract` request contains exactly `idempotencyKey`, `
 pnpm circle:contract:deploy -- --execute --idempotency-key <uuid-v4>
 ```
 
-Generate the key outside the repository. The first live deploy attempt was explicitly rejected with HTTP 400 before Circle returned deployment IDs; preserve its existing external operation record and old idempotency key as validation-rejected evidence, but do not reuse that key for the corrected payload. Generate a fresh UUIDv4 only for a deliberate later corrected submission. Continue reusing the same key only for a genuinely ambiguous outcome where Circle may have accepted the same request. Record future returned IDs under `CIRCLE_SETTLEMENT_CONTRACT_ID` and `CIRCLE_DEPLOYMENT_TRANSACTION_ID`; the command never edits `.env`. No deployment was completed and the external operation record was not modified during this coding task.
+Generate the key outside the repository only for a deliberate submission. Record future returned IDs under `CIRCLE_SETTLEMENT_CONTRACT_ID` and `CIRCLE_DEPLOYMENT_TRANSACTION_ID`; the command never edits `.env`.
 
 Retrieve both records with `pnpm circle:contract:status`, optionally adding `-- --wait`. CLI `--contract-id` and `--transaction-id` values override environment values. Wait defaults to 5 seconds for 600 seconds, never polls faster than two seconds, prints only changes, succeeds only on transaction `COMPLETE`, and fails immediately on `CANCELLED`, `DENIED`, `FAILED`, or `STUCK`.
 

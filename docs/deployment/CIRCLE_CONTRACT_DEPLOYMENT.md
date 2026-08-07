@@ -2,7 +2,7 @@
 
 ## Current status
 
-The production-safe Circle deployment pipeline is implemented. The first live `deployContract` attempt was explicitly rejected with HTTP 400 before Circle returned a contract ID or transaction ID. That operation is validation-rejected evidence, not an ambiguous networking outcome. **No deployment was completed, no request was retried, and no mutating Circle or Arc request was made during this coding task.**
+The production-safe Circle deployment pipeline is implemented. Earlier deployment requests received explicit HTTP 400 responses. No contract or transaction IDs were returned, and no deployment was completed. Future diagnostics expose only safe Circle code, message, validation field, and request ID values when available.
 
 ## 1. Prepare and preflight
 
@@ -16,7 +16,7 @@ Estimate and execute mode retrieve the configured Circle wallet first. The recor
 pnpm circle:contract:estimate
 ```
 
-This is the only live operation that is non-mutating. In wallet-ID mode, the Circle estimate request sends exactly `walletId`, `bytecode`, the ABI-derived `constructorSignature`, and `constructorParameters`. It deliberately omits `abiJson`, `blockchain`, and `sourceAddress`. Circle treats `abiJson` and `constructorSignature` as mutually exclusive for this estimate operation. ABI, blockchain `ARC-TESTNET`, and wallet address remain in the local validated preparation for wallet preflight, safe operator output, status validation, explorer links, and onchain verification.
+This is the only live operation that is non-mutating. In its wallet-ID source mode, the Circle estimate request sends exactly `walletId`, `bytecode`, the ABI-derived `constructorSignature`, and `constructorParameters`. It deliberately omits `abiJson`, `blockchain`, and `sourceAddress`. Circle treats `abiJson` and `constructorSignature` as mutually exclusive for this estimate operation. ABI, blockchain `ARC-TESTNET`, and wallet address remain in the local validated preparation for wallet preflight, safe operator output, status validation, explorer links, and onchain verification.
 
 The command prints only available safe medium-fee and request metadata, including `gasLimit`, `baseFee`, `priorityFee`, `maxFee`, `gasPrice`, `networkFee`, `networkFeeRaw`, and `l1Fee` when Circle supplies them. It does not require either network-fee field and is intentionally not part of `pnpm validate`. The real deployment request remains separate: it still includes ABI JSON and does not inherit this estimate-only omission.
 
@@ -36,16 +36,16 @@ Generate a UUIDv4 outside tracked files, then run:
 pnpm circle:contract:deploy -- --execute --idempotency-key <uuid-v4>
 ```
 
-The command performs all local checks and wallet preflight again, then submits exactly one wallet-ID-mode `deployContract` request containing only `idempotencyKey`, `name`, `description`, `walletId`, `abiJson`, `bytecode`, `constructorParameters`, and `fee`. The API request omits `blockchain`, `sourceAddress`, and `constructorSignature`; none are present with undefined values. Blockchain remains `ARC-TESTNET` in the canonical local preparation. Address-based source mode is a different request shape and would require `blockchain` plus `sourceAddress` instead of `walletId`.
+The command performs all local checks and wallet preflight again, then submits exactly one wallet-ID `deployContract` request containing only `idempotencyKey`, `name`, `description`, `walletId`, `blockchain`, `abiJson`, `bytecode`, `constructorParameters`, and `fee`. Arc Testnet deployment uses the already validated canonical preparation value `ARC-TESTNET`. The API request omits `sourceAddress` and `constructorSignature`; neither is present with an undefined value. Actual deploy uses `walletId` and `blockchain` together, while estimate uses its separate wallet-ID source mode and omits `blockchain`; the two schemas must not be conflated.
 
-Missing, invalid, or non-v4 keys and unknown arguments are rejected. The first live attempt received an explicit HTTP 400 and no deployment IDs, so its idempotency key must be retained with the existing failed operation record as validation-rejected evidence and must not be reused for the corrected payload. Generate a fresh UUIDv4 only when the corrected request is deliberately submitted later. Reuse the same key only for a genuinely ambiguous outcome where Circle may have accepted that same request. Record any future validated result manually:
+Missing, invalid, or non-v4 keys and unknown arguments are rejected. Generate a UUIDv4 outside tracked files only when a deployment is deliberately submitted. Record any future validated result manually:
 
 ```text
 CIRCLE_SETTLEMENT_CONTRACT_ID=
 CIRCLE_DEPLOYMENT_TRANSACTION_ID=
 ```
 
-The pipeline does not edit `.env` or create operation files. The existing external operation record was not modified during this coding task, and no deployment was completed.
+The pipeline does not edit `.env` or create operation files.
 
 ## 5. Check or wait for status
 
