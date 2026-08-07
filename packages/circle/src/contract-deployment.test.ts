@@ -79,19 +79,46 @@ test("explicit execution preflights and submits exactly once", async () => {
   assert.doesNotMatch(output.join("\n"), /0x6001|constructor|abiJson|idempotency/i);
 });
 
-test("deploy submits one canonical SDK request and validates response IDs", async () => {
+test("deploy projects the canonical preparation into the exact wallet-ID SDK request and validates response IDs", async () => {
   let calls = 0, request: unknown;
   const client = { async deployContract(input: unknown) { calls++; request = input; return { data: { contractId: "11111111-1111-4111-8111-111111111111", transactionId: "22222222-2222-4222-8222-222222222222" } }; } } as unknown as CircleSmartContractPlatformClient;
-  const canonical = { name: "SettlementEscrow" as const, description: "description", blockchain: "ARC-TESTNET" as const, walletId: "wallet-id", abiJson: "[]", bytecode: "0x6001", constructorParameters: preparation.constructorParameters, fee: { type: "level" as const, config: { feeLevel: "MEDIUM" as const } } };
-  const result = await submitDeployment({ client, request: canonical, idempotencyKey: "33333333-3333-4333-8333-333333333333" });
+  const canonical = {
+    name: "SettlementEscrow" as const,
+    description: "Settle escrow deployment test description.",
+    blockchain: "ARC-TESTNET" as const,
+    walletId: "wallet-id",
+    abiJson: JSON.stringify(preparation.abi),
+    bytecode: preparation.bytecode,
+    constructorParameters: preparation.constructorParameters,
+    fee: { type: "level" as const, config: { feeLevel: "MEDIUM" as const } },
+  };
+  const idempotencyKey = "33333333-3333-4333-8333-333333333333";
+  const result = await submitDeployment({ client, request: canonical, idempotencyKey });
   assert.equal(calls, 1);
-  assert.deepEqual(request, { ...canonical, constructorParameters: [...canonical.constructorParameters], idempotencyKey: "33333333-3333-4333-8333-333333333333" });
-  assert.deepEqual(Object.keys(request as object), ["name", "description", "blockchain", "walletId", "abiJson", "bytecode", "constructorParameters", "fee", "idempotencyKey"]);
+  assert.deepEqual(Object.keys(request as object), ["idempotencyKey", "name", "description", "walletId", "abiJson", "bytecode", "constructorParameters", "fee"]);
+  assert.equal(Object.hasOwn(request as object, "idempotencyKey"), true);
+  assert.equal(Object.hasOwn(request as object, "name"), true);
+  assert.equal(Object.hasOwn(request as object, "description"), true);
+  assert.equal(Object.hasOwn(request as object, "walletId"), true);
   assert.equal(Object.hasOwn(request as object, "abiJson"), true);
+  assert.equal(Object.hasOwn(request as object, "bytecode"), true);
+  assert.equal(Object.hasOwn(request as object, "constructorParameters"), true);
+  assert.equal(Object.hasOwn(request as object, "fee"), true);
+  assert.equal(Object.hasOwn(request as object, "blockchain"), false);
+  assert.equal(Object.hasOwn(request as object, "sourceAddress"), false);
   assert.equal(Object.hasOwn(request as object, "constructorSignature"), false);
+  assert.equal((request as { idempotencyKey: string }).idempotencyKey, idempotencyKey);
+  assert.equal((request as { name: string }).name, canonical.name);
+  assert.equal((request as { description: string }).description, canonical.description);
+  assert.equal((request as { walletId: string }).walletId, canonical.walletId);
+  assert.equal((request as { abiJson: string }).abiJson, canonical.abiJson);
+  assert.equal((request as { bytecode: string }).bytecode, canonical.bytecode);
+  assert.deepEqual((request as { constructorParameters: readonly string[] }).constructorParameters, [...canonical.constructorParameters]);
+  assert.deepEqual((request as { fee: unknown }).fee, { type: "level", config: { feeLevel: "MEDIUM" } });
+  assert.equal(canonical.blockchain, "ARC-TESTNET");
   assert.deepEqual(result, { contractId: "11111111-1111-4111-8111-111111111111", transactionId: "22222222-2222-4222-8222-222222222222" });
   const bad = { async deployContract() { return { data: { contractId: "bad", transactionId: "bad" } }; } } as unknown as CircleSmartContractPlatformClient;
-  await assert.rejects(() => submitDeployment({ client: bad, request: canonical, idempotencyKey: "33333333-3333-4333-8333-333333333333" }));
+  await assert.rejects(() => submitDeployment({ client: bad, request: canonical, idempotencyKey }));
 });
 
 test("status gateways retrieve safe contract and transaction fields", async () => {

@@ -141,11 +141,20 @@ export async function submitDeployment(input: Readonly<{
   idempotencyKey: string;
 }>): Promise<DeploymentSubmissionResult> {
   return withCircleErrorNormalization("deployContract", async () => {
-    const response = await input.client.deployContract({
-      ...input.request,
-      constructorParameters: [...input.request.constructorParameters],
+    const deployRequest = {
       idempotencyKey: input.idempotencyKey,
-    });
+      name: input.request.name,
+      description: input.request.description,
+      walletId: input.request.walletId,
+      abiJson: input.request.abiJson,
+      bytecode: input.request.bytecode,
+      constructorParameters: [...input.request.constructorParameters],
+      fee: input.request.fee,
+    };
+    // SDK 10.8 types still require blockchain in wallet-ID mode, contrary to the endpoint request model.
+    const response = await input.client.deployContract(
+      deployRequest as unknown as Parameters<CircleSmartContractPlatformClient["deployContract"]>[0],
+    );
     return {
       contractId: uuidSchema.parse(response.data?.contractId),
       transactionId: uuidSchema.parse(response.data?.transactionId),

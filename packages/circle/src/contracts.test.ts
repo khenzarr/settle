@@ -32,15 +32,18 @@ test("constructor signature is derived from ABI input types", async () => {
   assert.equal(deriveConstructorSignature(preparation.abi), preparation.constructorSignature);
 });
 
-test("canonical deployment request contains the exact SDK payload", async () => {
+test("canonical deployment preparation retains the exact local deployment data", async () => {
   const preparation = await prepareSettlementEscrowDeployment(config);
   const request = createCanonicalDeploymentRequest(preparation);
   assert.equal(request.name, "SettlementEscrow");
+  assert.equal(request.description, "Settle escrow for USDC settlement, role controls, disputes, and refunds on Arc Testnet.");
   assert.equal(request.blockchain, "ARC-TESTNET");
   assert.equal(request.walletId, config.deployerWalletId);
   assert.deepEqual(request.constructorParameters, preparation.constructorParameters);
   assert.deepEqual(request.fee, { type: "level", config: { feeLevel: "MEDIUM" } });
+  assert.equal(request.abiJson, JSON.stringify(preparation.abi));
   assert.deepEqual(JSON.parse(request.abiJson), preparation.abi);
+  assert.equal(request.bytecode, preparation.bytecode);
   assert.match(request.bytecode, /^0x[0-9a-f]+$/i);
   assert.ok(Object.hasOwn(preparation, "abi"));
   assert.ok(Object.hasOwn(request, "abiJson"));
