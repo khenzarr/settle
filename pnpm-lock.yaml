@@ -10,6 +10,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@settle/circle':
+        specifier: workspace:*
+        version: link:../../packages/circle
       '@settle/shared':
         specifier: workspace:*
         version: link:../../packages/shared

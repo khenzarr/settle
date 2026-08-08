@@ -27,6 +27,23 @@ export interface OperatorSettlementExecutionPreparation {
   readonly contractExecutionPlan: WalletContractExecutionPlan;
 }
 
+export interface OperatorSettlementDryRunPreparation {
+  readonly operation: OperatorSettlementCommandPlan["operation"];
+  readonly operatorSigner: EvmAddress;
+  readonly contractAddress: EvmAddress;
+  readonly abiFunctionSignature: string;
+  readonly parameterCount: number;
+  readonly expectedStateTransition: MarketplaceStateTransition;
+  readonly executionRequired: false;
+}
+
+export interface PrepareOperatorSettlementDryRunInput {
+  readonly plan: MarketplaceCommandPlan;
+  readonly configuredWalletAddress: string;
+  readonly configuredOperatorAddress: string;
+  readonly feeLevel?: string;
+}
+
 export interface PrepareOperatorSettlementExecutionInput {
   readonly plan: MarketplaceCommandPlan;
   readonly configuredWalletAddress: string;
@@ -76,6 +93,29 @@ export function prepareOperatorSettlementExecution(
     parameterCount: plan.abiParameters.length,
     expectedStateTransition: plan.expectedStateTransition,
     contractExecutionPlan,
+  };
+}
+
+export function prepareOperatorSettlementDryRun(
+  input: PrepareOperatorSettlementDryRunInput,
+): OperatorSettlementDryRunPreparation {
+  const preparation = prepareOperatorSettlementExecution({
+    plan: input.plan,
+    configuredWalletAddress: input.configuredWalletAddress,
+    configuredOperatorAddress: input.configuredOperatorAddress,
+    ...(input.feeLevel === undefined ? {} : { feeLevel: input.feeLevel }),
+  });
+  if (preparation.contractExecutionPlan.executionRequired) {
+    throw new TypeError("Operator dry-run preparation unexpectedly requires execution");
+  }
+  return {
+    operation: preparation.operation,
+    operatorSigner: preparation.operatorSigner,
+    contractAddress: preparation.contractAddress,
+    abiFunctionSignature: preparation.abiFunctionSignature,
+    parameterCount: preparation.parameterCount,
+    expectedStateTransition: preparation.expectedStateTransition,
+    executionRequired: false,
   };
 }
 

@@ -12,6 +12,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
+    "paths": { "@settle/circle": ["../../packages/circle/src/index.ts"] },
     "plugins": [{ "name": "next" }]
   },
   "include": [

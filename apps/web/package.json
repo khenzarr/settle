@@ -9,9 +9,10 @@
     "build": "next build",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "node --test lib/*.test.ts"
+    "test": "node --conditions=react-server --test lib/*.test.ts"
   },
   "dependencies": {
+    "@settle/circle": "workspace:*",
     "@settle/shared": "workspace:*",
     "next": "16.3.0",
     "react": "19.2.8",
