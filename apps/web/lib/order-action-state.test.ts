@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { OrderStatus } from "@settle/shared";
-import { projectOrderActionState } from "./order-action-state.ts";
+import { composeBuyerOperationState, projectOrderActionState } from "./order-action-state.ts";
+import { createBuyerOperation, projectBuyerOperation, transitionBuyerOperation } from "./buyer-transaction-progress.ts";
 
 const input = (patch: Partial<Parameters<typeof projectOrderActionState>[0]> = {}) => ({ status: OrderStatus.Created, buyer: "0xAbC0000000000000000000000000000000000001", connectedAccount: "0xabc0000000000000000000000000000000000001", fundingDeadlineOpen: true, allowance: 0n, requiredAmount: 100n, ...patch });
 
@@ -20,3 +21,14 @@ test("terminal statuses suppress all funding and distinguish cancellation", () =
 test("unknown status is explicitly unsupported and fail closed", () => { const state = projectOrderActionState(input({ status: 99 })); assert.equal(state.phase, "unknown"); assert.equal(state.primaryBuyerAction, "none"); assert.equal(state.fund.reasonCode, "unsupported-status"); });
 test("address comparison is normalized safely", () => { assert.equal(projectOrderActionState(input({ buyer: "  0xABC0000000000000000000000000000000000001  " })).connectedRole, "buyer"); });
 test("no funding action is exposed after Created", () => { for (const status of [OrderStatus.Funded, OrderStatus.Disputed, OrderStatus.Completed, OrderStatus.Refunded, OrderStatus.Cancelled]) assert.equal(projectOrderActionState(input({ status })).primaryBuyerAction, "none"); });
+test("matching approve and fund progress suppresses canonical availability", () => {
+  const approve = transitionBuyerOperation(createBuyerOperation("order-1", "approve"), { type: "start-submit" });
+  const fund = transitionBuyerOperation(createBuyerOperation("order-1", "fund"), { type: "start-submit" });
+  assert.equal(projectOrderActionState(input({ allowance: 0n })).approve.available, true);
+  assert.equal(composeBuyerOperationState(projectOrderActionState(input({ allowance: 0n })), projectBuyerOperation(approve)).approve.available, false);
+  assert.equal(composeBuyerOperationState(projectOrderActionState(input({ allowance: 100n })), projectBuyerOperation(fund)).fund.available, false);
+});
+test("canonical terminal order state remains authoritative", () => {
+  const operation = projectBuyerOperation(transitionBuyerOperation(createBuyerOperation("order-1", "fund"), { type: "start-submit" }));
+  assert.equal(composeBuyerOperationState(projectOrderActionState(input({ status: OrderStatus.Funded, allowance: 100n })), operation).fund.available, false);
+});

@@ -1,0 +1,17 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { createBuyerOperation, projectBuyerOperation, transitionBuyerOperation } from "./buyer-transaction-progress.ts";
+
+const hash = `0x${"a".repeat(64)}`;
+const progress = (events: Parameters<typeof transitionBuyerOperation>[1][]) => events.reduce(transitionBuyerOperation, createBuyerOperation("order-1", "approve"));
+const projected = (...events: Parameters<typeof transitionBuyerOperation>[1][]) => projectBuyerOperation(progress(events));
+
+test("idle approve allows submission", () => assert.equal(projected().submitAllowed, true));
+test("submitting blocks duplicates and has no recovery success", () => { const state = projected({ type: "start-submit" }); assert.equal(state.duplicateSubmissionBlocked, true); assert.equal(state.isSuccessful, false); assert.equal(state.recovery, "manual-review"); });
+test("hash transitions to pending receipt and prefers recovery", () => { const state = projected({ type: "start-submit" }, { type: "submission-returned-hash", transactionHash: hash }); assert.equal(state.progress, "pending-receipt"); assert.equal(state.transactionHash, hash); assert.equal(state.recovery, "confirm-existing"); });
+test("malformed hashes are rejected", () => assert.throws(() => projected({ type: "start-submit" }, { type: "submission-returned-hash", transactionHash: "0x123" }), /64 hexadecimal/));
+test("pending and included states suppress duplicate submission", () => { const pending = projected({ type: "start-submit" }, { type: "submission-returned-hash", transactionHash: hash }); assert.equal(pending.duplicateSubmissionBlocked, true); const included = projected({ type: "start-submit" }, { type: "submission-returned-hash", transactionHash: hash }, { type: "receipt-included" }); assert.equal(included.progress, "included-awaiting-state"); assert.equal(included.recovery, "confirm-existing"); });
+test("canonical confirmation is the only success", () => { const state = projected({ type: "start-submit" }, { type: "submission-returned-hash", transactionHash: hash }, { type: "receipt-included" }, { type: "canonical-state-confirmed" }); assert.equal(state.isSuccessful, true); assert.equal(state.submitAllowed, false); });
+test("reverted and submission errors never automatically retry", () => { const reverted = projected({ type: "start-submit" }, { type: "submission-returned-hash", transactionHash: hash }, { type: "receipt-reverted" }); assert.equal(reverted.isSuccessful, false); assert.equal(reverted.recovery, "manual-review"); assert.equal(reverted.submitAllowed, true); const failed = projected({ type: "start-submit" }, { type: "submission-failed" }); assert.equal(failed.recovery, "manual-review"); assert.equal(failed.isSuccessful, false); });
+test("confirmation error recovers known hash and illegal backwards transitions throw", () => { const state = projected({ type: "start-submit" }, { type: "submission-returned-hash", transactionHash: hash }, { type: "receipt-included" }, { type: "confirmation-failed" }); assert.equal(state.recovery, "confirm-existing"); assert.throws(() => transitionBuyerOperation(progress([{ type: "start-submit" }, { type: "submission-returned-hash", transactionHash: hash }, { type: "receipt-included" }, { type: "canonical-state-confirmed" }]), { type: "receipt-pending" }), /Illegal/); });
+test("operation identity remains attached", () => assert.equal(progress([]).operation, "approve"));

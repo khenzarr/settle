@@ -1,4 +1,5 @@
 import { OrderStatus } from "@settle/shared";
+import type { BuyerOperationState } from "./buyer-transaction-progress.ts";
 
 export type ConnectedRole = "disconnected" | "buyer" | "other";
 export type OrderPhase = "unknown" | "created" | "funded" | "disputed" | "completed" | "refunded" | "cancelled";
@@ -33,6 +34,7 @@ export interface OrderActionStateInput {
   allowance: bigint;
   requiredAmount: bigint;
   transactionProgress?: TransactionProgress;
+  buyerOperation?: BuyerOperationState;
 }
 
 export interface BuyerActionState {
@@ -96,4 +98,12 @@ export function projectOrderActionState(input: OrderActionStateInput): OrderActi
   const reason: ActionReasonCode = phase === "funded" ? "order-funded" : phase === "disputed" ? "order-disputed" : "order-terminal";
   const message = phase === "funded" ? "Funds are held in escrow; release or dispute is a protocol capability and is not a browser action in this phase." : phase === "disputed" ? "Escrow remains active; resolution requires an arbitrator workflow." : phase === "cancelled" ? "The unfunded Created order was cancelled; this is not a refund." : `The order is ${phase}.`;
   return { ...base, phase, primaryBuyerAction: "none", approve: unavailable(reason, "Unavailable", message), fund: unavailable(reason, "Unavailable", message), lifecycleLabel: phase[0]!.toUpperCase() + phase.slice(1), lifecycleMessage: message, isTerminal: terminal, hasActiveEscrow: phase === "funded" || phase === "disputed", workflow: phase === "disputed" ? "arbitrator" : phase === "funded" ? "buyer-or-operator" : "none" };
+}
+
+export function composeBuyerOperationState(state: OrderActionState, operation: BuyerOperationState | null): OrderActionState {
+  if (!operation || state.isTerminal || state.connectedRole !== "buyer") return state;
+  const action = operation.operation === "approve" ? state.approve : state.fund;
+  if (!action.available) return state;
+  const suppressed = { ...action, available: false, label: operation.statusLabel, message: operation.statusMessage };
+  return operation.operation === "approve" ? { ...state, approve: suppressed } : { ...state, fund: suppressed };
 }
