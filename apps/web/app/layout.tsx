@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Settle",
-  description: "Marketplace settlement software for Arc Testnet.",
+  description: "Programmable USDC settlement for modern commerce on Arc Testnet.",
 };
 
 export default function RootLayout({

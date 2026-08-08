@@ -28,14 +28,14 @@ export function PaymentHandoffPanel({ handoff }: PaymentHandoffProps) {
           <QRCodeSVG value={handoff.qr.payload} size={184} marginSize={2} level="M" />
         </div>
         <div className="handoff-details">
-          <p>Scan to open this Settle checkout.</p>
-          <dl>
-            <div><dt>Opens</dt><dd>{handoff.checkout.host}</dd></div>
-            <div><dt>Order</dt><dd title={handoff.orderId}>{shortOrderId}</dd></div>
-            <div><dt>Amount</dt><dd>{handoff.amount.usdc} USDC</dd></div>
-            <div><dt>Network</dt><dd>{handoff.network.blockchain}</dd></div>
+          <p>Scan to open this Settle checkout securely on another device. Scanning opens the checkout; it does not submit payment.</p>
+          <dl className="handoff-metadata">
+            <div><dt>Opens</dt><dd className="handoff-value handoff-host">{handoff.checkout.host}</dd></div>
+            <div><dt>Order</dt><dd className="handoff-value handoff-order" title={handoff.orderId}>{shortOrderId}</dd></div>
+            <div><dt>Amount</dt><dd className="handoff-value handoff-amount">{handoff.amount.usdc} USDC</dd></div>
+            <div><dt>Network</dt><dd className="handoff-value handoff-network">{handoff.network.blockchain}</dd></div>
           </dl>
-          <button className="secondary copy-link-button" type="button" onClick={() => void copyLink()}>{copied ? "Copied" : "Copy payment link"}</button>
+          <button className="secondary copy-link-button" type="button" onClick={() => void copyLink()} aria-live="polite">{copied ? "✓ Copied" : "Copy payment link"}</button>
         </div>
       </div>
     </section>
