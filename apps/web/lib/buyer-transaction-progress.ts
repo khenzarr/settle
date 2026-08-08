@@ -18,6 +18,7 @@ export type BuyerOperationEvent =
   | { type: "receipt-included" }
   | { type: "canonical-state-confirmed" }
   | { type: "confirmation-failed"; recoverable?: boolean }
+  | { type: "retry-confirmation" }
   | { type: "reset-after-explicit-user-action" };
 
 export interface BuyerOperationRecord {
@@ -51,6 +52,10 @@ export function createBuyerOperation(orderId: string, operation: BuyerOperation)
   return { orderId, operation, transactionHash: null, progress: "idle" };
 }
 
+export function restoreBuyerOperation(orderId: string, operation: BuyerOperation, transactionHash: string, progress: "pending-receipt" | "included-awaiting-state" | "confirmation-error"): BuyerOperationRecord {
+  return { orderId, operation, transactionHash: normalizeTransactionHash(transactionHash), progress };
+}
+
 const transitionError = (record: BuyerOperationRecord, event: BuyerOperationEvent): never => {
   throw new Error(`Illegal transaction progress transition: ${record.progress} -> ${event.type}`);
 };
@@ -81,6 +86,9 @@ export function transitionBuyerOperation(record: BuyerOperationRecord, event: Bu
     case "confirmation-failed":
       if (record.progress !== "pending-receipt" && record.progress !== "included-awaiting-state") return transitionError(record, event);
       return { ...record, progress: "confirmation-error" };
+    case "retry-confirmation":
+      if (record.progress !== "confirmation-error" || !record.transactionHash) return transitionError(record, event);
+      return { ...record, progress: "pending-receipt" };
     case "reset-after-explicit-user-action":
       if (record.progress === "idle" || IN_FLIGHT.includes(record.progress)) return transitionError(record, event);
       return { ...record, progress: "idle", transactionHash: null };
@@ -99,13 +107,13 @@ export function projectBuyerOperation(record: BuyerOperationRecord): BuyerOperat
   else if (progress === "submitting" || progress === "submission-error" || progress === "reverted") recovery = "manual-review";
   const copy: Record<BuyerOperationProgress, [string, string]> = {
     idle: ["Ready", "Ready to submit this operation."],
-    submitting: ["Submitting", "Wallet submission is in progress; wait before trying again."],
+    submitting: ["Submitting", "Waiting for wallet submission."],
     "pending-receipt": ["Waiting for receipt", transactionHash ? "Transaction submitted — waiting for receipt." : "Submission outcome is uncertain — do not resubmit yet."],
     "included-awaiting-state": ["Confirming canonical state", "Transaction included — confirming canonical state."],
     "state-confirmed": ["Confirmed", "Canonical state confirmed; no new submission is needed."],
-    reverted: ["Reverted", "Transaction reverted. Review the cause before explicitly trying again."],
-    "submission-error": ["Submission error", "Wallet submission failed or may be ambiguous. Review before explicitly trying again."],
-    "confirmation-error": ["Confirmation unavailable", "Canonical confirmation failed. Recover the existing transaction before resubmitting."],
+    reverted: ["Transaction reverted", "Transaction reverted. No successful state change was confirmed."],
+    "submission-error": ["Submission outcome needs review", "Submission could not be confirmed. Review before trying again."],
+    "confirmation-error": ["Confirmation needs review", "Transaction exists — confirmation can be retried."],
   };
   return { ...record, submitAllowed: !duplicateSubmissionBlocked && (progress === "idle" || progress === "reverted" || progress === "submission-error"), duplicateSubmissionBlocked, recovery, isSuccessful, isInFlight, isTerminal: isSuccessful || progress === "reverted" || progress === "submission-error" || progress === "confirmation-error", statusLabel: copy[progress][0], statusMessage: copy[progress][1] };
 }

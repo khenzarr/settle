@@ -40,13 +40,10 @@ export async function loadBuyerOrder(input: { orderId: unknown }, dependencies: 
     const order = result.order;
     const now = dependencies.now?.() ?? BigInt(Math.floor(Date.now() / 1000));
     const open = order.fundingDeadline > now;
-    if (order.status !== OrderStatus.Created) throw new BuyerOrderError("NON_CREATED_ORDER", `Order is ${String(order.status)}; buyer funding requires Created status.`);
-    if (!open) throw new BuyerOrderError("EXPIRED_DEADLINE", "The funding deadline has expired.");
-    const stored = { orderId, buyer: order.buyer, totalAmount: order.totalAmount, status: order.status } as const;
-    const approveIntent = prepareBuyerTransactionIntent(createApproveUsdcPlan({ order: stored }));
-    const fundIntent = prepareBuyerTransactionIntent(createFundOrderPlan({ order: stored }));
+    if (order.status === OrderStatus.Created && !open) throw new BuyerOrderError("EXPIRED_DEADLINE", "The funding deadline has expired.");
     const allowance = await dependencies.reader.readUsdcAllowance(order.buyer, ARC_TESTNET.settlementEscrow.address);
-    return { orderId, status: String(order.status), statusLabel: orderStatusLabel(order.status), buyer: order.buyer, amount: { baseUnits: order.totalAmount.toString(), usdc: formatUsdcAmount(order.totalAmount) }, fundingDeadline: order.fundingDeadline.toString(), fundingDeadlineOpen: open, allowance: { baseUnits: allowance.toString(), usdc: formatUsdcAmount(allowance) }, approveIntent: jsonIntent(approveIntent), fundIntent: jsonIntent(fundIntent), fundReady: allowance >= order.totalAmount };
+    const stored = { orderId, buyer: order.buyer, totalAmount: order.totalAmount, status: OrderStatus.Created } as const;
+    return { orderId, status: String(order.status), statusLabel: orderStatusLabel(order.status as OrderStatus), buyer: order.buyer, amount: { baseUnits: order.totalAmount.toString(), usdc: formatUsdcAmount(order.totalAmount) }, fundingDeadline: order.fundingDeadline.toString(), fundingDeadlineOpen: open, allowance: { baseUnits: allowance.toString(), usdc: formatUsdcAmount(allowance) }, approveIntent: jsonIntent(prepareBuyerTransactionIntent(createApproveUsdcPlan({ order: stored }))), fundIntent: jsonIntent(prepareBuyerTransactionIntent(createFundOrderPlan({ order: stored }))), fundReady: allowance >= order.totalAmount };
   } catch (cause) { throw safeError(cause); }
 }
 

@@ -36,10 +36,11 @@ test("derives intents and allowance only from the canonical order", async () => 
   assert.equal(JSON.stringify(response).includes("1234567"), true);
 });
 
-test("rejects unknown, non-Created, and expired orders", async () => {
+test("rejects unknown and expired orders while projecting canonical non-Created state", async () => {
   const unknown: SettlementEscrowReader = { ...reader(0n), readSettlementOrder: async (id) => ({ kind: "unknown", orderId: id as typeof orderId, exists: false }) };
   await assert.rejects(loadBuyerOrder({ orderId }, { reader: unknown }), (error: unknown) => error instanceof BuyerOrderError && error.code === "UNKNOWN_ORDER");
-  await assert.rejects(loadBuyerOrder({ orderId }, { reader: reader(0n, { ...order, status: OrderStatus.Funded }) }), (error: unknown) => error instanceof BuyerOrderError && error.code === "NON_CREATED_ORDER");
+  const funded = await loadBuyerOrder({ orderId }, { reader: reader(0n, { ...order, status: OrderStatus.Funded }) });
+  assert.equal(funded.status, String(OrderStatus.Funded));
   await assert.rejects(loadBuyerOrder({ orderId }, { reader: reader(0n), now: () => 2_000n }), (error: unknown) => error instanceof BuyerOrderError && error.code === "EXPIRED_DEADLINE");
 });
 
