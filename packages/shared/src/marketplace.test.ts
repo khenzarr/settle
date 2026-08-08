@@ -70,6 +70,12 @@ test("plans a deterministic publication-safe marketplace order", () => {
   assert.equal(first.order.settlement[2]!.expectedAmountBaseUnits, "4250000");
   assert.equal(first.network.chainId, ARC_TESTNET.chainId);
   assert.equal("calldata" in first, false);
+  assert.equal(first.paymentIntent.orderId, first.order.orderId);
+  assert.equal(first.paymentIntent.paymentState, "planned");
+  assert.equal(first.paymentIntent.checkout.pageAvailable, false);
+  assert.equal(first.paymentIntent.checkout.paymentActionAvailable, false);
+  assert.equal(first.paymentIntent.checkout.reason, "marketplace-create-required");
+  assert.equal("walletId" in first.paymentIntent, false);
 });
 
 test("rejects money, identity, split, deadline, and dangerous input violations", () => {

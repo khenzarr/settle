@@ -8,6 +8,7 @@ import { orderIdSchema, nonZeroEvmAddressSchema, normalizeAddress, termsHashSche
 import { calculateSettlementPayouts, settlementSplitsSchema, type SettlementSplit } from "./settlement.ts";
 import type { OrderEvidence } from "./settlement-evidence.ts";
 import type { SettlementOrderProjection } from "./settlement-read.ts";
+import { projectPlannedPaymentIntent } from "./payment-intent.ts";
 
 export function canonicalSettlementFields(domain: string, fields: readonly (readonly [string, string])[]): string {
   return [domain, ...fields.map(([name, value]) => `${name.length}:${name}:${new TextEncoder().encode(value).length}:${value}`)].join("\n");
@@ -39,6 +40,7 @@ export type MarketplaceOrderPlan = {
   readonly order: MarketplaceOrderPlanOrder;
   readonly network: MarketplaceNetwork;
   readonly next: { readonly action: "marketplace-create-required"; readonly checkoutAvailable: false };
+  readonly paymentIntent: import("./payment-intent.ts").PaymentIntentView;
 };
 export type MarketplaceOrderPlanOrder = {
   readonly orderId: OrderId; readonly buyer: EvmAddress;
@@ -86,7 +88,8 @@ export function createMarketplaceOrderPlan(input: unknown): MarketplaceOrderPlan
   const orderId = orderIdSchema.parse(hashSettlementText(canonicalSettlementFields("settle.marketplace.order-id.v1", fields)));
   const termsHash = termsHashSchema.parse(hashSettlementText(canonicalSettlementFields("settle.marketplace.terms.v1", fields)));
   const payouts = calculateSettlementPayouts(normalized.amountBaseUnits, normalized.settlement);
-  return { mode: "plan", executionAvailable: false, externalOrderId: normalized.externalOrderId, order: { orderId, buyer: normalized.buyer, amount: { baseUnits: normalized.amountBaseUnits.toString(), usdc: normalized.amountUsdc }, fundingDeadline: normalized.fundingDeadline.toString(), settlementDeadline: normalized.settlementDeadline.toString(), termsHash, settlement: normalized.settlement.map((split, index) => ({ ...split, expectedAmountBaseUnits: payouts[index]!.toString(), expectedAmountUsdc: formatUsdcAmount(payouts[index]!) })) }, network: { blockchain: ARC_TESTNET.name, chainId: ARC_TESTNET.chainId, settlementContract: ARC_TESTNET.settlementEscrow.address, usdc: ARC_TESTNET.usdc.address }, next: { action: "marketplace-create-required", checkoutAvailable: false } };
+  const base = { mode: "plan" as const, executionAvailable: false as const, externalOrderId: normalized.externalOrderId, order: { orderId, buyer: normalized.buyer, amount: { baseUnits: normalized.amountBaseUnits.toString(), usdc: normalized.amountUsdc }, fundingDeadline: normalized.fundingDeadline.toString(), settlementDeadline: normalized.settlementDeadline.toString(), termsHash, settlement: normalized.settlement.map((split, index) => ({ ...split, expectedAmountBaseUnits: payouts[index]!.toString(), expectedAmountUsdc: formatUsdcAmount(payouts[index]!) })) }, network: { blockchain: ARC_TESTNET.name, chainId: ARC_TESTNET.chainId, settlementContract: ARC_TESTNET.settlementEscrow.address, usdc: ARC_TESTNET.usdc.address }, next: { action: "marketplace-create-required" as const, checkoutAvailable: false as const } };
+  return { ...base, paymentIntent: projectPlannedPaymentIntent(base) };
 }
 
 export function projectMarketplaceOrder(input: { order: SettlementOrderProjection; now: bigint; evidence?: OrderEvidence; evidenceWarning?: string }): MarketplaceOrderView {
