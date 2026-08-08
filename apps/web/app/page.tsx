@@ -5,6 +5,7 @@ import { ARC_TESTNET, getExplorerTransactionUrl } from "@settle/shared";
 import { connectWallet, submitBuyerTransaction, switchToArcTestnet, type BuyerSubmissionResult, type Eip1193Provider, type WalletState } from "../lib/buyer-wallet-adapter";
 import type { BuyerOrderResponse, JsonIntent } from "../lib/buyer-order-intent-service";
 import type { BuyerConfirmationResponse } from "../lib/buyer-transaction-confirmation";
+import { projectOrderActionState } from "../lib/order-action-state";
 
 declare global { interface Window { ethereum?: Eip1193Provider } }
 
@@ -19,6 +20,7 @@ export default function Home() {
   const [confirmation, setConfirmation] = useState<BuyerConfirmationResponse | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState("");
+  const actionState = order ? projectOrderActionState({ status: Number(order.status), buyer: order.buyer, connectedAccount: wallet.account, fundingDeadlineOpen: order.fundingDeadlineOpen, allowance: BigInt(order.allowance.baseUnits), requiredAmount: BigInt(order.amount.baseUnits), transactionProgress: approveSubmitted ? "pending-receipt" : undefined }) : null;
   const provider = () => { if (!window.ethereum) throw new Error("No injected EVM wallet found"); return window.ethereum; };
   async function run(action: () => Promise<void>) { setError(""); try { await action(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Wallet request failed"); } }
   async function confirm(operation: "approve-usdc" | "fund-order", hash: string) {
@@ -57,9 +59,11 @@ export default function Home() {
       <button onClick={() => run(async () => { const response = await fetch("/api/buyer/order", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ orderId }) }); const body = await response.json() as BuyerOrderResponse | { error?: { message?: string } }; if (!response.ok) throw new Error("error" in body && body.error?.message ? body.error.message : "Unable to load order"); setOrder(body as BuyerOrderResponse); setApproveSubmitted(false); })}>Load order</button>
       {order && <><dl><dt>Buyer</dt><dd>{order.buyer}</dd><dt>Amount</dt><dd>{order.amount.usdc} USDC ({order.amount.baseUnits} base units)</dd><dt>Status</dt><dd>{order.statusLabel}</dd><dt>Deadline</dt><dd>{order.fundingDeadline} ({order.fundingDeadlineOpen ? "open" : "expired"})</dd><dt>Allowance</dt><dd>{order.allowance.usdc} USDC ({order.allowance.baseUnits} base units)</dd></dl>
       <IntentPreview title="Approve operation preview" intent={order.approveIntent} />
-      <button disabled={!wallet.account || approveSubmitted} onClick={() => run(async () => { const submission = await submitBuyerTransaction(executableIntent(order.approveIntent), provider()); setResult(submission); setApproveSubmitted(true); setConfirmation(null); await confirm("approve-usdc", submission.hash); })}>Approve</button>
+      <button disabled={!actionState?.approve.available || approveSubmitted} onClick={() => run(async () => { const submission = await submitBuyerTransaction(executableIntent(order.approveIntent), provider()); setResult(submission); setApproveSubmitted(true); setConfirmation(null); await confirm("approve-usdc", submission.hash); })}>Approve</button>
       <IntentPreview title="Fund operation preview" intent={order.fundIntent} />
-       <button disabled={!wallet.account || !order.fundReady || approveSubmitted} onClick={() => run(async () => { const submission = await submitBuyerTransaction(executableIntent(order.fundIntent), provider()); setResult(submission); setConfirmation(null); await confirm("fund-order", submission.hash); })}>Fund</button>
+       <button disabled={!actionState?.fund.available || approveSubmitted} onClick={() => run(async () => { const submission = await submitBuyerTransaction(executableIntent(order.fundIntent), provider()); setResult(submission); setConfirmation(null); await confirm("fund-order", submission.hash); })}>Fund</button>
+       {actionState && <p>{actionState.lifecycleMessage}</p>}
+       {actionState && !actionState.approve.available && actionState.primaryBuyerAction !== "fund" && <p>{actionState.approve.message}</p>}
        {approveSubmitted && <p>Approval submitted — not confirmed. Fund stays disabled until canonical allowance is refreshed and sufficient.</p>}
       <button className="secondary" onClick={() => run(async () => { const response = await fetch("/api/buyer/order", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ orderId }) }); const body = await response.json() as BuyerOrderResponse; if (!response.ok) throw new Error("Unable to refresh order"); setOrder(body); setApproveSubmitted(false); })}>Refresh order state</button></>}
     </section>
