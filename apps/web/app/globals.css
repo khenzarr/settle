@@ -4,6 +4,23 @@
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.handoff-panel { margin-top: 2rem; }
+.handoff-heading { align-items: center; display: flex; justify-content: space-between; margin-bottom: 18px; }
+.handoff-heading h2 { font-size: 1.2rem; margin: 3px 0 0; }
+.handoff-content { align-items: center; display: grid; gap: 24px; grid-template-columns: 208px minmax(0, 1fr); }
+.handoff-qr { align-items: center; background: #fff; border: 1px solid #28344f; display: flex; height: 208px; justify-content: center; width: 208px; }
+.handoff-details > p { color: #94a3b8; margin: 0 0 14px; }
+.handoff-details dl { display: grid; gap: 8px; margin: 0 0 18px; }
+.handoff-details dl div { display: grid; gap: 12px; grid-template-columns: 64px minmax(0, 1fr); }
+.handoff-details dt { color: #94a3b8; }
+.handoff-details dd { font-family: monospace; margin: 0; overflow-wrap: anywhere; }
+.copy-link-button { align-items: center; display: inline-flex; gap: 8px; }
+
+@media (max-width: 620px) {
+  .handoff-content { grid-template-columns: 1fr; }
+  .handoff-qr { margin-inline: auto; }
+}
+
 * {
   box-sizing: border-box;
 }

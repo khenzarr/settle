@@ -28,3 +28,5 @@ export { canonicalSettlementFields, createMarketplaceOrderPlan, hashSettlementTe
 export type { MarketplaceExecutionCapability, MarketplaceNetwork, MarketplaceOrderAction, MarketplaceOrderPlan, MarketplaceOrderPlanOrder, MarketplaceOrderPlanRequest, MarketplaceOrderView, MarketplaceSettlementSplit } from "./marketplace.ts";
 export { checkoutPath, projectOnchainPaymentIntent, projectPlannedPaymentIntent } from "./payment-intent.ts";
 export type { CanonicalOrderStatus, PaymentIntentSource, PaymentIntentView, PaymentState } from "./payment-intent.ts";
+export { PAYMENT_HANDOFF_QR_CONTENT_TYPE, projectPaymentHandoff } from "./payment-handoff.ts";
+export type { PaymentHandoff } from "./payment-handoff.ts";

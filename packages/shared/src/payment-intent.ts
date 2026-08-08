@@ -16,6 +16,7 @@ export type PaymentIntentView = {
   readonly deadlines: { readonly funding: string; readonly settlement: string };
   readonly network: MarketplaceNetwork;
   readonly checkout: { readonly pageAvailable: boolean; readonly paymentActionAvailable: boolean; readonly path?: string; readonly reason?: string };
+  readonly handoff: { readonly available: boolean; readonly paymentActionAvailable: boolean; readonly reason?: string };
   readonly customerActions: readonly ("pay" | "raise-dispute")[];
   readonly lifecycle: { readonly escrow: "not-funded" | "held" | "released" | "returned"; readonly settlement: "not-settled" | "completed" };
   readonly settlementSummary: readonly { readonly recipient: string; readonly shareBps: number; readonly expectedAmountBaseUnits: string; readonly expectedAmountUsdc: string }[];
@@ -49,7 +50,7 @@ export function projectPlannedPaymentIntent(plan: Omit<MarketplaceOrderPlan, "pa
   return {
     orderId: plan.order.orderId, source: "plan", canonicalStatus: "None", paymentState: "planned", buyer: plan.order.buyer,
     amount: { ...plan.order.amount, currency: "USDC" }, deadlines: { funding: plan.order.fundingDeadline, settlement: plan.order.settlementDeadline }, network: plan.network,
-    checkout: { pageAvailable: false, paymentActionAvailable: false, reason: "marketplace-create-required" }, customerActions: [],
+    checkout: { pageAvailable: false, paymentActionAvailable: false, reason: "marketplace-create-required" }, handoff: { available: false, paymentActionAvailable: false, reason: "marketplace-create-required" }, customerActions: [],
     lifecycle: { escrow: "not-funded", settlement: "not-settled" }, settlementSummary: plan.order.settlement.map(({ recipient, shareBps, expectedAmountBaseUnits, expectedAmountUsdc }) => ({ recipient, shareBps, expectedAmountBaseUnits: expectedAmountBaseUnits!, expectedAmountUsdc: expectedAmountUsdc! })),
     evidence: { completeness: "unavailable", lifecycle: [], payouts: [], warnings: [] }, externalOrderId: plan.externalOrderId,
   };
@@ -66,6 +67,7 @@ export function projectOnchainPaymentIntent(view: MarketplaceOrderView, now: big
     orderId: view.orderId, source: "onchain", canonicalStatus: status, paymentState, buyer: view.buyer,
     amount: { ...view.amount, currency: "USDC" }, deadlines: view.deadlines, network: network(),
     checkout: { pageAvailable: true, paymentActionAvailable: canPay, path: checkoutPath(view.orderId), ...(canPay ? {} : { reason: paymentState === "payment-window-expired" ? "payment-window-expired" : "payment-not-permitted" }) },
+    handoff: { available: true, paymentActionAvailable: canPay, ...(canPay ? {} : { reason: paymentState === "payment-window-expired" ? "payment-window-expired" : "payment-not-permitted" }) },
     customerActions: canPay ? ["pay"] : status === "Funded" ? ["raise-dispute"] : [], lifecycle: { escrow, settlement: status === "Completed" ? "completed" : "not-settled" },
     settlementSummary: view.settlement, evidence: view.evidence,
   };

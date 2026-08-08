@@ -7,7 +7,7 @@
   "exports": "./src/index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --test src/index.test.ts src/settlement-command-plan.test.ts src/settlement-transaction-intent.test.ts src/settlement-read.test.ts src/settlement-evidence.test.ts src/abi/SettlementEscrow.test.ts src/marketplace.test.ts src/payment-intent.test.ts"
+    "test": "node --test src/index.test.ts src/settlement-command-plan.test.ts src/settlement-transaction-intent.test.ts src/settlement-read.test.ts src/settlement-evidence.test.ts src/abi/SettlementEscrow.test.ts src/marketplace.test.ts src/payment-intent.test.ts src/payment-handoff.test.ts"
   },
   "dependencies": {
     "viem": "^2.55.11",
