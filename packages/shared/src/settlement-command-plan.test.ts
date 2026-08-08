@@ -10,7 +10,12 @@ import {
   createApproveUsdcPlan,
   createCreateOrderPlan,
   createFundOrderPlan,
+  createCancelExpiredOrderPlan,
+  createRaiseDisputePlan,
+  createRefundOrderPlan,
+  createResolveDisputePlan,
   createReleaseOrderPlan,
+  DisputeResolution,
   parseUsdcAmount,
 } from "./index.ts";
 
@@ -154,13 +159,61 @@ test("release-order requires operator and projects contract-performed split payo
   assert.equal(plan.abiFunctionSignature.includes("transfer"), false);
 });
 
-test("uses the exact four ABI signatures", () => {
+test("uses the exact lifecycle ABI signatures", () => {
   assert.deepEqual(MARKETPLACE_COMMAND_ABI_SIGNATURES, {
     createOrder: "createOrder(bytes32,address,uint256,uint256,uint256,bytes32,address[],uint16[])",
     approveUsdc: "approve(address,uint256)",
     fundOrder: "fundOrder(bytes32)",
     releaseOrder: "releaseOrder(bytes32)",
+    cancelExpiredOrder: "cancelExpiredOrder(bytes32)",
+    raiseDispute: "raiseDispute(bytes32)",
+    refundOrder: "refundOrder(bytes32)",
+    resolveDispute: "resolveDispute(bytes32,uint8)",
   });
+});
+
+test("cancel requires Created and strict timestamp expiry, permits any caller, and moves no USDC", () => {
+  assert.throws(() => createCancelExpiredOrderPlan({ callerAddress: RECIPIENT_A, order: createdOrder, fundingDeadline: 2_000n, currentTimestamp: 2_000n }));
+  const plan = createCancelExpiredOrderPlan({ callerAddress: RECIPIENT_A, order: createdOrder, fundingDeadline: 2_000n, currentTimestamp: 2_001n });
+  assert.equal(plan.abiFunctionSignature, "cancelExpiredOrder(bytes32)");
+  assert.deepEqual(plan.abiParameters, [ORDER_ID]);
+  assert.deepEqual(plan.expectedSigner, { kind: MarketplaceSignerKind.Public, address: RECIPIENT_A });
+  assert.deepEqual(plan.expectedStateTransition, { system: "settlement-escrow", from: OrderStatus.Created, to: OrderStatus.Cancelled });
+  assert.deepEqual(plan.expectedUsdcEffect, { kind: "none", amount: 0n });
+  assert.throws(() => createCancelExpiredOrderPlan({ callerAddress: RECIPIENT_A, order: { ...createdOrder, status: OrderStatus.Cancelled }, fundingDeadline: 2_000n, currentTimestamp: 2_001n }));
+});
+
+test("buyer dispute requires Funded and exact stored buyer while operator authority stays distinct", () => {
+  const funded = { ...createdOrder, status: OrderStatus.Funded } as const;
+  assert.throws(() => createRaiseDisputePlan({ callerAddress: BUYER, callerKind: "buyer", order: createdOrder }));
+  assert.throws(() => createRaiseDisputePlan({ callerAddress: RECIPIENT_A, callerKind: "buyer", order: funded }));
+  const plan = createRaiseDisputePlan({ callerAddress: BUYER, callerKind: "buyer", order: funded });
+  assert.equal(plan.abiFunctionSignature, "raiseDispute(bytes32)");
+  assert.deepEqual(plan.abiParameters, [ORDER_ID]);
+  assert.deepEqual(plan.expectedStateTransition, { system: "settlement-escrow", from: OrderStatus.Funded, to: OrderStatus.Disputed });
+  assert.deepEqual(plan.expectedUsdcEffect, { kind: "none", amount: 0n });
+});
+
+test("operator refund models full return without granting browser authority", () => {
+  const plan = createRefundOrderPlan({ operatorAddress: OPERATOR, order: { ...createdOrder, status: OrderStatus.Funded } });
+  assert.equal(plan.abiFunctionSignature, "refundOrder(bytes32)");
+  assert.deepEqual(plan.abiParameters, [ORDER_ID]);
+  assert.equal(plan.expectedSigner.kind, MarketplaceSignerKind.Operator);
+  assert.deepEqual(plan.expectedStateTransition, { system: "settlement-escrow", from: OrderStatus.Funded, to: OrderStatus.Refunded });
+  assert.deepEqual(plan.expectedUsdcEffect, { kind: "full-refund", from: ARC_TESTNET.settlementEscrow.address, to: BUYER, amount: createdOrder.totalAmount, mechanism: "SettlementEscrow refundOrder" });
+});
+
+test("arbitrator resolution preserves uint8 enum outcomes Release=0 and Refund=1", () => {
+  const disputed = { ...createdOrder, totalAmount: 101n, status: OrderStatus.Disputed } as const;
+  const release = createResolveDisputePlan({ arbitratorAddress: OPERATOR, order: disputed, resolution: DisputeResolution.Release, splits: createInput.splits });
+  const refund = createResolveDisputePlan({ arbitratorAddress: OPERATOR, order: disputed, resolution: DisputeResolution.Refund, splits: [] });
+  assert.equal(release.abiFunctionSignature, "resolveDispute(bytes32,uint8)");
+  assert.deepEqual(release.abiParameters, [ORDER_ID, 0]);
+  assert.deepEqual(refund.abiParameters, [ORDER_ID, 1]);
+  assert.equal(release.expectedStateTransition.to, OrderStatus.Completed);
+  assert.equal(refund.expectedStateTransition.to, OrderStatus.Refunded);
+  assert.equal(release.expectedSigner.kind, MarketplaceSignerKind.Arbitrator);
+  assert.throws(() => createResolveDisputePlan({ arbitratorAddress: OPERATOR, order: disputed, resolution: 2 as DisputeResolution, splits: [] }));
 });
 
 test("does not expose execution or write-client capability", () => {

@@ -1,4 +1,4 @@
-export type BuyerOperation = "approve" | "fund";
+export type BuyerOperation = "approve" | "fund" | "cancel" | "dispute";
 export type BuyerOperationProgress =
   | "idle"
   | "submitting"

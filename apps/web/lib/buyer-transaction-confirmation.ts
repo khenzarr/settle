@@ -4,7 +4,7 @@ import {
   type SettlementEscrowReader,
 } from "@settle/shared";
 
-export type BuyerConfirmationOperation = "approve-usdc" | "fund-order";
+export type BuyerConfirmationOperation = "approve-usdc" | "fund-order" | "cancel-expired-order" | "raise-dispute";
 export type BuyerConfirmationStatus = "pending" | "reverted" | "included-awaiting-state" | "state-confirmed";
 export interface BuyerConfirmationInput { orderId: unknown; transactionHash: unknown; operation: unknown }
 export interface BuyerConfirmationResponse {
@@ -25,7 +25,7 @@ export interface ConfirmationPollingOptions { maxAttempts?: number; delayMs?: nu
 
 function inputOf(input: BuyerConfirmationInput): { orderId: string; transactionHash: string; operation: BuyerConfirmationOperation } {
   try {
-    const operation = input.operation === "approve-usdc" || input.operation === "fund-order" ? input.operation : null;
+    const operation = input.operation === "approve-usdc" || input.operation === "fund-order" || input.operation === "cancel-expired-order" || input.operation === "raise-dispute" ? input.operation : null;
     if (!operation) throw new Error();
     return { orderId: orderIdSchema.parse(input.orderId), transactionHash: transactionHashSchema.parse(input.transactionHash).toLowerCase(), operation };
   } catch { throw new BuyerConfirmationError("MALFORMED_INPUT", "orderId, transactionHash, and operation are required and valid."); }
@@ -40,7 +40,7 @@ export async function confirmBuyerTransaction(input: BuyerConfirmationInput, { r
     if (!reader.readTransactionReceipt) throw new BuyerConfirmationError("READ_FAILURE", "Receipt confirmation is not available.");
     const receipt = await reader.readTransactionReceipt(parsed.transactionHash);
     if (!receipt) return { ...parsed, confirmationStatus: "pending", receipt: null, stateConfirmed: false, arcScanUrl: getExplorerTransactionUrl(parsed.transactionHash as `0x${string}`) };
-    if (receipt.from.toLowerCase() !== order.buyer.toLowerCase()) throw new BuyerConfirmationError("IDENTITY_MISMATCH", "Receipt sender does not match the canonical order buyer.");
+    if (parsed.operation !== "cancel-expired-order" && receipt.from.toLowerCase() !== order.buyer.toLowerCase()) throw new BuyerConfirmationError("IDENTITY_MISMATCH", "Receipt sender does not match the canonical order buyer.");
     const expectedTo = parsed.operation === "approve-usdc" ? ARC_TESTNET.usdc.address : ARC_TESTNET.settlementEscrow.address;
     if (receipt.to.toLowerCase() !== expectedTo.toLowerCase()) throw new BuyerConfirmationError("IDENTITY_MISMATCH", "Receipt target does not match the canonical operation target.");
     const evidence = { blockNumber: receipt.blockNumber.toString(), from: receipt.from, to: receipt.to };
@@ -53,7 +53,8 @@ export async function confirmBuyerTransaction(input: BuyerConfirmationInput, { r
     }
     const current = await reader.readSettlementOrder(parsed.orderId);
     if (current.kind === "unknown") throw new BuyerConfirmationError("UNKNOWN_ORDER", "The order does not exist.");
-    const confirmed = current.order.status === OrderStatus.Funded;
+    const expectedStatus = parsed.operation === "fund-order" ? OrderStatus.Funded : parsed.operation === "cancel-expired-order" ? OrderStatus.Cancelled : OrderStatus.Disputed;
+    const confirmed = current.order.status === expectedStatus;
     return { ...base, confirmationStatus: confirmed ? "state-confirmed" : "included-awaiting-state", orderStatus: String(current.order.status), stateConfirmed: confirmed };
   } catch (cause) {
     if (cause instanceof BuyerConfirmationError) throw cause;

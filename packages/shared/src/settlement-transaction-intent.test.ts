@@ -12,6 +12,10 @@ import {
   createApproveUsdcPlan,
   createCreateOrderPlan,
   createFundOrderPlan,
+  createCancelExpiredOrderPlan,
+  createRaiseDisputePlan,
+  createRefundOrderPlan,
+  createResolveDisputePlan,
   createReleaseOrderPlan,
   parseUsdcAmount,
   prepareBuyerTransactionIntent,
@@ -81,6 +85,32 @@ test("prepares exact fundOrder calldata and retains approval prerequisite", () =
   assert.deepEqual(decoded.args, [ORDER_ID]);
   assert.deepEqual(intent.prerequisites, plan.prerequisites);
   assert.equal(intent.prerequisites.some((item) => item.kind === "exact-usdc-allowance"), true);
+});
+
+test("prepares exact zero-value public cancel intent for canonical target and order", () => {
+  const intent = prepareBuyerTransactionIntent(createCancelExpiredOrderPlan({ callerAddress: RECIPIENT, order: createdOrder, fundingDeadline: 2_000n, currentTimestamp: 2_001n }));
+  const decoded = decodeFunctionData({ abi: settlementEscrowAbi, data: intent.data });
+  assert.equal(intent.operation, "cancel-expired-order");
+  assert.equal(intent.to, ARC_TESTNET.settlementEscrow.address);
+  assert.equal(intent.value, 0n);
+  assert.deepEqual(intent.expectedSigner, { kind: "public", address: RECIPIENT });
+  assert.equal(decoded.functionName, "cancelExpiredOrder");
+  assert.deepEqual(decoded.args, [ORDER_ID]);
+});
+
+test("prepares exact zero-value buyer dispute intent and rejects privileged lifecycle plans", () => {
+  const funded = { ...createdOrder, status: OrderStatus.Funded } as const;
+  const intent = prepareBuyerTransactionIntent(createRaiseDisputePlan({ callerAddress: BUYER, callerKind: "buyer", order: funded }));
+  const decoded = decodeFunctionData({ abi: settlementEscrowAbi, data: intent.data });
+  assert.equal(intent.operation, "raise-dispute");
+  assert.equal(intent.to, ARC_TESTNET.settlementEscrow.address);
+  assert.equal(intent.value, 0n);
+  assert.deepEqual(intent.expectedSigner, { kind: "buyer", address: BUYER });
+  assert.equal(decoded.functionName, "raiseDispute");
+  assert.deepEqual(decoded.args, [ORDER_ID]);
+  assert.throws(() => prepareBuyerTransactionIntent(createRaiseDisputePlan({ callerAddress: OPERATOR, callerKind: "operator", order: funded })));
+  assert.throws(() => prepareBuyerTransactionIntent(createRefundOrderPlan({ operatorAddress: OPERATOR, order: funded })));
+  assert.throws(() => prepareBuyerTransactionIntent(createResolveDisputePlan({ arbitratorAddress: OPERATOR, order: { ...funded, status: OrderStatus.Disputed }, resolution: 1, splits: [] })));
 });
 
 test("rejects operator create and release plans", () => {

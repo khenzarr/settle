@@ -70,11 +70,12 @@ export async function switchToArcTestnet(provider: Eip1193Provider): Promise<voi
 }
 
 function validateIntent(intent: BuyerTransactionIntent, state: WalletState): void {
-  if (intent.expectedSigner.kind !== "buyer") throw new Error("Only buyer intents can be submitted");
+  if (intent.expectedSigner.kind !== "buyer" && intent.expectedSigner.kind !== "public") throw new Error("Unsupported buyer browser intent signer");
   if (intent.chainId !== ARC_TESTNET.chainId) throw new Error("Intent chain is not Arc Testnet");
   if (intent.value !== 0n) throw new Error("Buyer intent value must be zero");
   if (state.chainId !== ARC_TESTNET.chainId) throw new Error("Switch wallet to Arc Testnet before submitting");
-  if (!state.account || state.account.toLowerCase() !== intent.from.toLowerCase()) throw new Error("Connected account does not match buyer intent");
+  if (!state.account) throw new Error("Connect a wallet before submitting");
+  if (intent.expectedSigner.kind === "buyer" && state.account.toLowerCase() !== intent.from.toLowerCase()) throw new Error("Connected account does not match buyer intent");
   if (intent.expectedSigner.address.toLowerCase() !== intent.from.toLowerCase()) throw new Error("Buyer intent signer does not match sender");
 }
 

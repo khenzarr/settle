@@ -28,6 +28,8 @@ test("derives intents and allowance only from the canonical order", async () => 
   const response = await loadBuyerOrder({ orderId }, { reader: reader(amount, order, calls), now: () => 1_500n });
   assert.equal(response.buyer, buyer);
   assert.equal(response.amount.baseUnits, amount.toString());
+  assert.ok(response.approveIntent);
+  assert.ok(response.fundIntent);
   assert.equal(response.approveIntent.to.toLowerCase(), ARC_TESTNET.usdc.address.toLowerCase());
   assert.equal(response.approveIntent.data.slice(0, 10), "0x095ea7b3");
   assert.equal(response.fundIntent.to.toLowerCase(), ARC_TESTNET.settlementEscrow.address.toLowerCase());
@@ -36,12 +38,17 @@ test("derives intents and allowance only from the canonical order", async () => 
   assert.equal(JSON.stringify(response).includes("1234567"), true);
 });
 
-test("rejects unknown and expired orders while projecting canonical non-Created state", async () => {
+test("rejects unknown orders and projects deadline boundary plus canonical non-Created state", async () => {
   const unknown: SettlementEscrowReader = { ...reader(0n), readSettlementOrder: async (id) => ({ kind: "unknown", orderId: id as typeof orderId, exists: false }) };
   await assert.rejects(loadBuyerOrder({ orderId }, { reader: unknown }), (error: unknown) => error instanceof BuyerOrderError && error.code === "UNKNOWN_ORDER");
   const funded = await loadBuyerOrder({ orderId }, { reader: reader(0n, { ...order, status: OrderStatus.Funded }) });
   assert.equal(funded.status, String(OrderStatus.Funded));
-  await assert.rejects(loadBuyerOrder({ orderId }, { reader: reader(0n), now: () => 2_000n }), (error: unknown) => error instanceof BuyerOrderError && error.code === "EXPIRED_DEADLINE");
+  const boundary = await loadBuyerOrder({ orderId, callerAddress: buyer }, { reader: reader(0n), now: () => 2_000n });
+  assert.equal(boundary.fundingDeadlineOpen, false);
+  assert.equal(boundary.fundingDeadlineExpired, false);
+  assert.equal(boundary.approveIntent, null);
+  assert.equal(boundary.fundIntent, null);
+  assert.equal(boundary.cancelIntent, null);
 });
 
 test("fund readiness uses exact allowance comparison", async () => {

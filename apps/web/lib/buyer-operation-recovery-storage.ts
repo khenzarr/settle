@@ -14,7 +14,7 @@ export interface StoredBuyerOperationRecovery {
 }
 
 const RECOVERABLE: readonly RecoverableProgress[] = ["pending-receipt", "included-awaiting-state", "confirmation-error"];
-const OPERATIONS: readonly BuyerOperation[] = ["approve", "fund"];
+const OPERATIONS: readonly BuyerOperation[] = ["approve", "fund", "cancel", "dispute"];
 
 export function buyerRecoveryStorageKey(orderId: string, operation: BuyerOperation): string {
   return `${BUYER_RECOVERY_PREFIX}:${orderId.toLowerCase()}:${operation}`;

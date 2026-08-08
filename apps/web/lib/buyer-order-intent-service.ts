@@ -1,11 +1,11 @@
 import {
-  ARC_TESTNET, OrderStatus, createApproveUsdcPlan, createFundOrderPlan,
+  ARC_TESTNET, OrderStatus, createApproveUsdcPlan, createCancelExpiredOrderPlan, createFundOrderPlan, createRaiseDisputePlan,
   createHttpSettlementRpcTransport, createSettlementEscrowReader, formatUsdcAmount,
   orderIdSchema, prepareBuyerTransactionIntent, orderStatusLabel,
   type BuyerTransactionIntent, type SettlementEscrowReader,
 } from "@settle/shared";
 
-export type BuyerOrderErrorCode = "MALFORMED_ORDER_ID" | "WRONG_CHAIN" | "UNKNOWN_ORDER" | "NON_CREATED_ORDER" | "EXPIRED_DEADLINE" | "RPC_FAILURE" | "MALFORMED_CHAIN_RESPONSE";
+export type BuyerOrderErrorCode = "MALFORMED_ORDER_ID" | "WRONG_CHAIN" | "UNKNOWN_ORDER" | "RPC_FAILURE" | "MALFORMED_CHAIN_RESPONSE";
 export class BuyerOrderError extends Error {
   readonly code: BuyerOrderErrorCode;
   constructor(code: BuyerOrderErrorCode, message: string) { super(message); this.name = "BuyerOrderError"; this.code = code; }
@@ -14,9 +14,9 @@ export class BuyerOrderError extends Error {
 export type JsonIntent = Omit<BuyerTransactionIntent, "value" | "prerequisites"> & { value: "0"; prerequisites: readonly Record<string, unknown>[] };
 export interface BuyerOrderResponse {
   orderId: string; status: string; statusLabel: string; buyer: string; amount: { baseUnits: string; usdc: string };
-  fundingDeadline: string; fundingDeadlineOpen: boolean;
+  fundingDeadline: string; fundingDeadlineOpen: boolean; fundingDeadlineExpired: boolean;
   allowance: { baseUnits: string; usdc: string };
-  approveIntent: JsonIntent; fundIntent: JsonIntent; fundReady: boolean;
+  approveIntent: JsonIntent | null; fundIntent: JsonIntent | null; cancelIntent: JsonIntent | null; disputeIntent: JsonIntent | null; fundReady: boolean;
 }
 export interface BuyerOrderDependencies { reader: SettlementEscrowReader; now?: () => bigint; }
 
@@ -31,7 +31,7 @@ function safeError(cause: unknown): BuyerOrderError {
   return new BuyerOrderError("RPC_FAILURE", "Unable to read the order from Arc Testnet.");
 }
 
-export async function loadBuyerOrder(input: { orderId: unknown }, dependencies: BuyerOrderDependencies): Promise<BuyerOrderResponse> {
+export async function loadBuyerOrder(input: { orderId: unknown; callerAddress?: unknown }, dependencies: BuyerOrderDependencies): Promise<BuyerOrderResponse> {
   let orderId: string;
   try { orderId = orderIdSchema.parse(input.orderId); } catch { throw new BuyerOrderError("MALFORMED_ORDER_ID", "Order ID must be a bytes32 value."); }
   try {
@@ -40,10 +40,15 @@ export async function loadBuyerOrder(input: { orderId: unknown }, dependencies: 
     const order = result.order;
     const now = dependencies.now?.() ?? BigInt(Math.floor(Date.now() / 1000));
     const open = order.fundingDeadline > now;
-    if (order.status === OrderStatus.Created && !open) throw new BuyerOrderError("EXPIRED_DEADLINE", "The funding deadline has expired.");
+    const expired = now > order.fundingDeadline;
     const allowance = await dependencies.reader.readUsdcAllowance(order.buyer, ARC_TESTNET.settlementEscrow.address);
-    const stored = { orderId, buyer: order.buyer, totalAmount: order.totalAmount, status: OrderStatus.Created } as const;
-    return { orderId, status: String(order.status), statusLabel: orderStatusLabel(order.status as OrderStatus), buyer: order.buyer, amount: { baseUnits: order.totalAmount.toString(), usdc: formatUsdcAmount(order.totalAmount) }, fundingDeadline: order.fundingDeadline.toString(), fundingDeadlineOpen: open, allowance: { baseUnits: allowance.toString(), usdc: formatUsdcAmount(allowance) }, approveIntent: jsonIntent(prepareBuyerTransactionIntent(createApproveUsdcPlan({ order: stored }))), fundIntent: jsonIntent(prepareBuyerTransactionIntent(createFundOrderPlan({ order: stored }))), fundReady: allowance >= order.totalAmount };
+    const stored = { orderId, buyer: order.buyer, totalAmount: order.totalAmount, status: order.status as OrderStatus } as const;
+    const callerAddress = typeof input.callerAddress === "string" ? input.callerAddress : null;
+    const created = order.status === OrderStatus.Created;
+    const funded = order.status === OrderStatus.Funded;
+    const buyerDispute = funded && callerAddress?.toLowerCase() === order.buyer.toLowerCase();
+    const cancel = created && expired && callerAddress ? jsonIntent(prepareBuyerTransactionIntent(createCancelExpiredOrderPlan({ callerAddress, currentTimestamp: now, fundingDeadline: order.fundingDeadline, order: stored }))) : null;
+    return { orderId, status: String(order.status), statusLabel: orderStatusLabel(order.status as OrderStatus), buyer: order.buyer, amount: { baseUnits: order.totalAmount.toString(), usdc: formatUsdcAmount(order.totalAmount) }, fundingDeadline: order.fundingDeadline.toString(), fundingDeadlineOpen: open, fundingDeadlineExpired: expired, allowance: { baseUnits: allowance.toString(), usdc: formatUsdcAmount(allowance) }, approveIntent: created && open ? jsonIntent(prepareBuyerTransactionIntent(createApproveUsdcPlan({ order: { ...stored, status: OrderStatus.Created } }))) : null, fundIntent: created && open ? jsonIntent(prepareBuyerTransactionIntent(createFundOrderPlan({ order: { ...stored, status: OrderStatus.Created } }))) : null, cancelIntent: cancel, disputeIntent: buyerDispute ? jsonIntent(prepareBuyerTransactionIntent(createRaiseDisputePlan({ callerKind: "buyer", callerAddress: callerAddress!, order: { ...stored, status: OrderStatus.Funded } }))) : null, fundReady: created && open && allowance >= order.totalAmount };
   } catch (cause) { throw safeError(cause); }
 }
 

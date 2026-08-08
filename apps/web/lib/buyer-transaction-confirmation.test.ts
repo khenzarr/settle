@@ -26,6 +26,17 @@ test("fund confirms only when canonical order is Funded", async () => {
   assert.equal((await confirmBuyerTransaction({ orderId: ORDER_ID, transactionHash: HASH, operation: "fund-order" }, deps({ tx: fundReceipt }))).confirmationStatus, "included-awaiting-state");
   assert.equal((await confirmBuyerTransaction({ orderId: ORDER_ID, transactionHash: HASH, operation: "fund-order" }, deps({ orderStatus: OrderStatus.Funded, tx: fundReceipt }))).confirmationStatus, "state-confirmed");
 });
+test("dispute requires canonical Disputed state and receipt inclusion alone is not success", async () => {
+  const lifecycleReceipt = receipt({ to: ARC_TESTNET.settlementEscrow.address });
+  assert.equal((await confirmBuyerTransaction({ orderId: ORDER_ID, transactionHash: HASH, operation: "raise-dispute" }, deps({ orderStatus: OrderStatus.Funded, tx: lifecycleReceipt }))).confirmationStatus, "included-awaiting-state");
+  assert.equal((await confirmBuyerTransaction({ orderId: ORDER_ID, transactionHash: HASH, operation: "raise-dispute" }, deps({ orderStatus: OrderStatus.Disputed, tx: lifecycleReceipt }))).confirmationStatus, "state-confirmed");
+  await assert.rejects(confirmBuyerTransaction({ orderId: ORDER_ID, transactionHash: HASH, operation: "raise-dispute" }, deps({ orderStatus: OrderStatus.Disputed, tx: receipt({ from: OTHER, to: ARC_TESTNET.settlementEscrow.address }) })), { code: "IDENTITY_MISMATCH" });
+});
+test("public cancel requires canonical Cancelled state and permits a non-buyer receipt sender", async () => {
+  const lifecycleReceipt = receipt({ from: OTHER, to: ARC_TESTNET.settlementEscrow.address });
+  assert.equal((await confirmBuyerTransaction({ orderId: ORDER_ID, transactionHash: HASH, operation: "cancel-expired-order" }, deps({ orderStatus: OrderStatus.Created, tx: lifecycleReceipt }))).confirmationStatus, "included-awaiting-state");
+  assert.equal((await confirmBuyerTransaction({ orderId: ORDER_ID, transactionHash: HASH, operation: "cancel-expired-order" }, deps({ orderStatus: OrderStatus.Cancelled, tx: lifecycleReceipt }))).confirmationStatus, "state-confirmed");
+});
 test("identity mismatches are rejected", async () => {
   await assert.rejects(confirmBuyerTransaction({ orderId: ORDER_ID, transactionHash: HASH, operation: "approve-usdc" }, deps({ tx: receipt({ from: OTHER }) })), { code: "IDENTITY_MISMATCH" });
   await assert.rejects(confirmBuyerTransaction({ orderId: ORDER_ID, transactionHash: HASH, operation: "approve-usdc" }, deps({ tx: receipt({ to: ARC_TESTNET.settlementEscrow.address }) })), { code: "IDENTITY_MISMATCH" });

@@ -5,8 +5,10 @@ import { ARC_TESTNET } from "./chains.ts";
 import {
   MARKETPLACE_COMMAND_ABI_SIGNATURES,
   MarketplaceSignerKind,
+  type CancelExpiredOrderCommandPlan,
   type ApproveUsdcCommandPlan,
   type FundOrderCommandPlan,
+  type RaiseDisputeCommandPlan,
   type MarketplaceCommandPrerequisite,
   type MarketplaceCommandPlan,
 } from "./settlement-command-plan.ts";
@@ -24,18 +26,18 @@ const erc20Abi = [{
 }] as const;
 
 export interface BuyerTransactionIntent {
-  readonly operation: "approve-usdc" | "fund-order";
+  readonly operation: "approve-usdc" | "fund-order" | "cancel-expired-order" | "raise-dispute";
   readonly chainId: typeof ARC_TESTNET.chainId;
   readonly from: EvmAddress;
   readonly to: EvmAddress;
   readonly data: Hex;
   readonly value: 0n;
   readonly expectedSigner: {
-    readonly kind: "buyer";
+    readonly kind: "buyer" | "public";
     readonly address: EvmAddress;
   };
   readonly summary: string;
-  readonly prerequisites: FundOrderCommandPlan["prerequisites"];
+  readonly prerequisites: readonly MarketplaceCommandPrerequisite[];
 }
 
 function invalid(message: string): never {
@@ -63,18 +65,18 @@ function immutablePrerequisites(prerequisites: readonly MarketplaceCommandPrereq
   return Object.freeze(prerequisites.map((prerequisite) => Object.freeze({ ...prerequisite })));
 }
 
-function requireBuyerPlan(plan: MarketplaceCommandPlan): ApproveUsdcCommandPlan | FundOrderCommandPlan {
-  if (plan.operation !== "approve-usdc" && plan.operation !== "fund-order") {
-    invalid("only approve-usdc and fund-order plans are supported");
+function requireBuyerPlan(plan: MarketplaceCommandPlan): ApproveUsdcCommandPlan | FundOrderCommandPlan | CancelExpiredOrderCommandPlan | RaiseDisputeCommandPlan {
+  if (plan.operation !== "approve-usdc" && plan.operation !== "fund-order" && plan.operation !== "cancel-expired-order" && plan.operation !== "raise-dispute") {
+    invalid("only approve-usdc, fund-order, cancel-expired-order, and raise-dispute plans are supported");
   }
   if (plan.chain.chainId !== ARC_TESTNET.chainId || plan.chain.environment !== ARC_TESTNET.environment || plan.chain.name !== ARC_TESTNET.name) {
     invalid("chain metadata is not canonical Arc Testnet");
   }
-  if (plan.expectedSigner.kind !== MarketplaceSignerKind.Buyer) {
+  if (plan.expectedSigner.kind !== MarketplaceSignerKind.Buyer && plan.expectedSigner.kind !== MarketplaceSignerKind.Public) {
     invalid("expected signer must be the buyer");
   }
-  const buyer = canonicalAddress(plan.expectedSigner.address, "buyer signer");
-  if (buyer !== plan.expectedSigner.address) invalid("buyer signer must be canonical");
+  const signer = canonicalAddress(plan.expectedSigner.address, "transaction signer");
+  if (signer !== plan.expectedSigner.address) invalid("transaction signer must be canonical");
   if (plan.changesChainState !== true || typeof plan.summary !== "string" || plan.summary.length === 0 || !Array.isArray(plan.prerequisites)) {
     invalid("plan metadata is malformed");
   }
@@ -109,6 +111,27 @@ export function prepareBuyerTransactionIntent(plan: MarketplaceCommandPlan): Buy
       expectedSigner: { kind: "buyer", address: buyer },
       summary: buyerPlan.summary,
       prerequisites,
+    };
+    return Object.freeze({ ...intent, expectedSigner: Object.freeze(intent.expectedSigner) });
+  }
+
+  if (buyerPlan.operation === "cancel-expired-order" || buyerPlan.operation === "raise-dispute") {
+    if (buyerPlan.targetAddress !== ARC_TESTNET.settlementEscrow.address || buyerPlan.abiFunctionSignature !== MARKETPLACE_COMMAND_ABI_SIGNATURES[buyerPlan.operation === "cancel-expired-order" ? "cancelExpiredOrder" : "raiseDispute"]) invalid("lifecycle target or function signature is not canonical");
+    if (!Array.isArray(buyerPlan.abiParameters) || buyerPlan.abiParameters.length !== 1) invalid("lifecycle parameters are malformed");
+    const [orderId] = buyerPlan.abiParameters;
+    try { orderIdSchema.parse(orderId); } catch (cause) { throw new TypeError("Invalid buyer transaction intent source plan: order ID is malformed", { cause }); }
+    if (buyerPlan.operation === "raise-dispute" && buyerPlan.expectedSigner.kind !== MarketplaceSignerKind.Buyer) invalid("browser dispute intent must use the stored buyer signer");
+    const signerKind: "buyer" | "public" = buyerPlan.operation === "raise-dispute" ? "buyer" : "public";
+    const intent: BuyerTransactionIntent = {
+      operation: buyerPlan.operation,
+      chainId: ARC_TESTNET.chainId,
+      from: buyer,
+      to: ARC_TESTNET.settlementEscrow.address,
+      data: encodeFunctionData({ abi: settlementEscrowAbi, functionName: buyerPlan.operation === "cancel-expired-order" ? "cancelExpiredOrder" : "raiseDispute", args: [abiBytes32(orderId)] }),
+      value: 0n,
+      expectedSigner: { kind: signerKind, address: buyer },
+      summary: buyerPlan.summary,
+      prerequisites: immutablePrerequisites(buyerPlan.prerequisites),
     };
     return Object.freeze({ ...intent, expectedSigner: Object.freeze(intent.expectedSigner) });
   }
