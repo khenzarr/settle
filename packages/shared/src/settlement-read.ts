@@ -288,7 +288,10 @@ export function createHttpSettlementRpcTransport(rpcUrl: string, fetcher: typeof
 
   let nextId = 1;
   return Object.freeze({
-    async request(method: "eth_chainId" | "eth_call" | "eth_getTransactionReceipt", params: readonly unknown[]): Promise<unknown> {
+    async request(method: string, params: readonly unknown[]): Promise<unknown> {
+      if (!["eth_chainId", "eth_call", "eth_getTransactionReceipt", "eth_blockNumber", "eth_getLogs"].includes(method)) {
+        throw new SettlementReadError("INVALID_CONFIGURATION", `Unsupported read-only RPC method: ${method}`);
+      }
       let response: Response;
       try {
         response = await fetcher(url, {

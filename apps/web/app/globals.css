@@ -41,3 +41,10 @@ label { display: block; margin-bottom: .5rem; }
 input { width: 100%; padding: .75rem; color: inherit; background: #080d19; border: 1px solid #3b4966; border-radius: .4rem; font: .85rem monospace; }
 .preview { display: grid; gap: .5rem; margin: 1rem 0; } code, a { color: #7dd3fc; overflow-wrap: anywhere; }
 .error { margin-top: 1rem; color: #fda4af; }
+.evidence { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #28344f; }
+.evidence h3 { margin: 0 0 1rem; text-transform: uppercase; letter-spacing: .08em; color: #7dd3fc; }
+.evidence h4 { margin-bottom: .5rem; }
+.timeline { display: grid; gap: .75rem; padding-left: 1.5rem; }
+.timeline li { display: grid; gap: .2rem; }
+.timeline span, .evidence li { line-height: 1.5; }
+.warning { color: #fbbf24; margin-top: .75rem; }

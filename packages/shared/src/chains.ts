@@ -24,6 +24,7 @@ export const ARC_TESTNET = {
   },
   settlementEscrow: {
     address: ARC_TESTNET_SETTLEMENT_ESCROW_ADDRESS,
+    deploymentBlock: 55_777_134n,
   },
 } as const;
 
