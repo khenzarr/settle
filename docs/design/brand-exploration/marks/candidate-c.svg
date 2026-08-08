@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+  <title>Settle candidate C — Settlement Notch</title>
+  <path d="M3 3h5v7h3v4H8v7H3z"/>
+  <path d="M21 3h-5v7h-3v4h3v7h5z"/>
+  <path d="M8 10h8v4H8z" fill="white"/>
+</svg>
