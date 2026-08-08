@@ -31,6 +31,9 @@ importers:
       server-only:
         specifier: 0.0.1
         version: 0.0.1
+      viem:
+        specifier: ^2.55.11
+        version: 2.55.11(typescript@5.9.3)(zod@4.4.3)
     devDependencies:
       '@types/node':
         specifier: 26.1.2

@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "demo:readiness": "node --conditions=react-server --env-file-if-exists=../../.env scripts/demo-readiness.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "node --conditions=react-server --test lib/*.test.ts"
@@ -19,6 +20,7 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "server-only": "0.0.1"
+    ,"viem": "^2.55.11"
   },
   "devDependencies": {
     "@types/node": "26.1.2",

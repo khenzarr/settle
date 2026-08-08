@@ -9,6 +9,7 @@
     "typecheck": "pnpm --recursive --if-present typecheck",
     "test": "pnpm --recursive --if-present test",
     "build:web": "pnpm --filter @settle/web build",
+    "demo:readiness": "pnpm --filter @settle/web demo:readiness",
     "contracts:preflight:arc": "node packages/contracts/scripts/preflight-arc-testnet.mjs",
     "contracts:build": "forge build --root packages/contracts",
     "contracts:abi": "pnpm contracts:build && node packages/contracts/scripts/export-settlement-abi.mjs",
