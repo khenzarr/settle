@@ -24,3 +24,5 @@ export { prepareBuyerTransactionIntent } from "./settlement-transaction-intent.t
 export type { BuyerTransactionIntent } from "./settlement-transaction-intent.ts";
 export { SettlementReadError, createHttpSettlementRpcTransport, createSettlementEscrowReader } from "./settlement-read.ts";
 export type { NormalizedOrderTimestamps, RawSettlementOrder, SettlementEscrowReader, SettlementEscrowReaderConfig, SettlementOrderProjection, SettlementOrderProjectionResult, SettlementOrderReadResult, SettlementPayoutProjection, SettlementReadErrorCode, SettlementRpcTransport, SettlementSplitsReadResult, SettlementTransactionReceipt } from "./settlement-read.ts";
+export { canonicalSettlementFields, createMarketplaceOrderPlan, hashSettlementText, marketplaceOrderPlanRequestSchema, normalizeMarketplaceOrderPlanRequest, projectMarketplaceOrder } from "./marketplace.ts";
+export type { MarketplaceExecutionCapability, MarketplaceNetwork, MarketplaceOrderAction, MarketplaceOrderPlan, MarketplaceOrderPlanOrder, MarketplaceOrderPlanRequest, MarketplaceOrderView, MarketplaceSettlementSplit } from "./marketplace.ts";
