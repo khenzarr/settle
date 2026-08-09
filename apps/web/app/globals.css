@@ -54,6 +54,33 @@ button { min-height: 44px; margin-top: 1rem; padding: .7rem 1rem; border: 1px so
 .flow-node--resolved { border-color: var(--settlement-light); background: var(--brand-core); }
 .flow-node--resolved small { color: var(--text-secondary); }
 .homepage .flow > i { position: relative; z-index: 2; width: .7rem; height: .7rem; justify-self: center; border: 1px solid var(--settlement-light); background: var(--surface-1); font-size: 0; transform: none; }
+.hero-stage { position: relative; }
+.hero-stage::before { position: absolute; top: 50%; left: -1.56rem; width: .5rem; height: .5rem; border: 1px solid var(--settlement-light); background: var(--surface-1); content: ""; opacity: 1; transform: translateY(-50%); }
+.hero-stage--payment::before { animation: settle-hero-marker-resolve var(--motion-duration-standard) var(--motion-ease-resolve) 0ms both; }
+.hero-stage--escrow::before { animation: settle-hero-marker-resolve var(--motion-duration-standard) var(--motion-ease-resolve) var(--motion-stagger-standard) both; }
+.hero-stage--distribution::before { background: var(--settlement-light); animation: settle-hero-marker-resolve var(--motion-duration-standard) var(--motion-ease-resolve) calc(var(--motion-stagger-standard) * 2) both; }
+.hero-rail { transform: scaleY(1); transform-origin: top; }
+.hero-rail--escrow { animation: settle-hero-rail-resolve var(--motion-duration-standard) var(--motion-ease-resolve) 0ms both; }
+.hero-rail--distribution { animation: settle-hero-rail-resolve var(--motion-duration-standard) var(--motion-ease-resolve) var(--motion-stagger-standard) both; }
+.flow--deterministic::before { transform: scaleX(1); transform-origin: left; }
+.flow--deterministic .flow-node::after { position: absolute; top: 50%; right: -.37rem; width: .4rem; height: .4rem; border: 1px solid var(--settlement-light); background: var(--surface-2); content: ""; opacity: 1; transform: translateY(-50%); }
+.flow--deterministic .flow-node--resolved::after { background: var(--settlement-light); }
+.flow-node--stage-1 { --flow-stage-delay: 0ms; }
+.flow-node--stage-2, .flow-junction--stage-2 { --flow-stage-delay: var(--motion-stagger-fast); }
+.flow-node--stage-3, .flow-junction--stage-3 { --flow-stage-delay: calc(var(--motion-stagger-fast) * 2); }
+.flow-node--stage-4, .flow-junction--stage-4 { --flow-stage-delay: calc(var(--motion-stagger-fast) * 3); }
+.flow-node--stage-5, .flow-junction--stage-5 { --flow-stage-delay: calc(var(--motion-stagger-fast) * 4); }
+.flow--motion-armed::before { transform: scaleX(0); }
+.flow--motion-armed .flow-node::after { opacity: .28; transform: translate(calc(-1 * var(--motion-distance-small)), -50%); }
+.flow--motion-armed .flow-junction { opacity: .28; transform: translateX(calc(-1 * var(--motion-distance-small))); }
+.flow--motion-active::before { animation: settle-branch-rail-resolve var(--motion-duration-deliberate) var(--motion-ease-resolve) both; }
+.flow--motion-active .flow-node::after { animation: settle-branch-marker-resolve var(--motion-duration-deliberate) var(--motion-ease-resolve) var(--flow-stage-delay) both; }
+.flow--motion-active .flow-junction { animation: settle-junction-converge var(--motion-duration-deliberate) var(--motion-ease-resolve) var(--flow-stage-delay) both; }
+@keyframes settle-hero-rail-resolve { from { transform: scaleY(0); } }
+@keyframes settle-hero-marker-resolve { from { opacity: .28; transform: translateY(calc(-50% - var(--motion-distance-small))); } }
+@keyframes settle-branch-rail-resolve { from { transform: scaleX(0); } }
+@keyframes settle-branch-marker-resolve { from { opacity: .28; transform: translate(calc(-1 * var(--motion-distance-small)), -50%); } }
+@keyframes settle-junction-converge { from { opacity: .28; transform: translateX(calc(-1 * var(--motion-distance-small))); } }
 .trust-boundary { display: grid; grid-template-columns: minmax(13rem, .8fr) minmax(0, 1.2fr); gap: 1.5rem 3rem; border: 0; border-top: 1px solid var(--border-strong); border-bottom: 1px solid var(--border-subtle); border-radius: 0; background: transparent; }
 .trust-boundary h2 { font-size: clamp(1.45rem, 2.4vw, 2rem); }
 .trust-copy { display: grid; gap: .75rem; max-width: 42rem; }
@@ -82,8 +109,16 @@ button { min-height: 44px; margin-top: 1rem; padding: .7rem 1rem; border: 1px so
   .hero-aside { max-width: none; padding: 1.25rem 0 0; border-top: 1px solid var(--border-strong); border-left: 0; }
   .homepage .flow { grid-template-columns: 1fr; gap: .55rem; margin-top: 1.5rem; }
   .homepage .flow::before { top: 3%; bottom: 3%; left: .55rem; width: 1px; height: auto; }
+  .flow--deterministic::before { transform: scaleY(1); transform-origin: top; }
   .flow-node { min-height: 4.5rem; padding-left: 1.5rem; }
+  .flow--deterministic .flow-node::after { top: auto; right: auto; bottom: -.37rem; left: .35rem; transform: translateX(-50%); }
   .homepage .flow > i { width: .65rem; height: .65rem; margin-block: -.75rem; justify-self: start; margin-left: .25rem; }
+  .flow--motion-armed::before { transform: scaleY(0); }
+  .flow--motion-armed .flow-node::after { transform: translate(-50%, calc(-1 * var(--motion-distance-small))); }
+  .flow--motion-armed .flow-junction { transform: translateY(calc(-1 * var(--motion-distance-small))); }
+  .flow--motion-active::before { animation-name: settle-branch-rail-resolve-mobile; }
+  .flow--motion-active .flow-node::after { animation-name: settle-branch-marker-resolve-mobile; }
+  .flow--motion-active .flow-junction { animation-name: settle-junction-converge-mobile; }
   .trust-boundary { grid-template-columns: 1fr; gap: 1.25rem; }
   .trust-steps { grid-column: auto; grid-template-columns: 1fr; gap: .8rem; }
   .homepage .section-heading { align-items: flex-start; flex-direction: column; }
@@ -97,6 +132,14 @@ button { min-height: 44px; margin-top: 1rem; padding: .7rem 1rem; border: 1px so
   .action-row { align-items: stretch; flex-direction: column; }
   .action-row button { width: 100%; margin-top: .65rem; }
   .status-badge { white-space: normal; }
+}
+
+@keyframes settle-branch-rail-resolve-mobile { from { transform: scaleY(0); } }
+@keyframes settle-branch-marker-resolve-mobile { from { opacity: .28; transform: translate(-50%, calc(-1 * var(--motion-distance-small))); } }
+@keyframes settle-junction-converge-mobile { from { opacity: .28; transform: translateY(calc(-1 * var(--motion-distance-small))); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-stage::before, .hero-rail, .flow--deterministic::before, .flow--deterministic .flow-node::after, .flow--deterministic .flow-junction { animation: none; }
 }
 
 /* D4D0.7C2 hosted checkout: hierarchy, deterministic branches, and calm density. */

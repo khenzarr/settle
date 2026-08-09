@@ -1,8 +1,8 @@
 # Settle Motion System
 
-**Decision record:** D4D0.8A  
-**Status:** Implemented for review  
-**Scope:** Motion architecture and tokens only; no cinematic choreography
+**Decision record:** D4D0.8A foundation; D4D0.8B homepage narrative implementation; D4D0.8B-R1 branch visibility activation  
+**Status:** D4D0.8B-R1 implemented for review  
+**Scope:** Motion architecture and tokens; homepage Converge / Resolve explanatory narrative
 
 ## Direction
 
@@ -115,6 +115,14 @@ Prefer `transform` and `opacity`. Do not animate layout, large blur/filter, box-
 
 There is no generic route/page entrance animation and no default IntersectionObserver choreography. Header and footer stay stable. Content is immediately usable. Motion never delays reading, wallet connection, order loading, authorization, link copying, QR scanning, or canonical state. The maximum perceived elapsed motion budget for any future narrative sequence is `680ms`, including all stagger delay before the final element completes; interaction is never blocked.
 
+#### Narrow Deterministic Branch visibility exception
+
+Generic section, card, and text scroll reveals remain prohibited. The homepage Deterministic Branch is the sole narrow exception: because this signature explanatory product visual is below the fold on important viewports, a presentation-only `IntersectionObserver` uses visibility only as a one-time start signal so its sequence is not consumed offscreen. The observer targets only the `.flow--deterministic` diagram, with `threshold: 0.35` and `rootMargin: 0px 0px -10% 0px`. This requires a meaningful portion of the diagram to enter a viewport whose bottom 10% is excluded; it does not require 100% visibility and starts promptly on first observation when desktop already exposes enough of the diagram.
+
+In normal motion, a layout effect arms only decorative rail, marker, and junction geometry before paint; all five node cards and their labels remain present. Meaningful visibility atomically replaces the armed class with the active class, CSS runs the accepted independent `600ms` sequence, and the observer disconnects immediately. A mounted wrapper retains an activation ref, so scroll-away/back, hover, focus, resize, and orientation changes cannot replay the sequence. There is no scroll progress, reversal, pausing, listener, timer choreography, or generalized observer framework.
+
+The base CSS state is the final resolved diagram. If JavaScript fails or `IntersectionObserver` is unavailable, the wrapper never arms and all content and decorative geometry remain understandable in that valid final state rather than hidden. Under the current `prefers-reduced-motion: reduce` preference, the wrapper neither arms nor observes: the branch renders directly in its approved final resolved state with no structural travel.
+
 Ambient motion is not implemented. If later approved, it must be slow, low contrast, pause into the background, and disappear under reduced motion. No particles, canvas, WebGL, shaders, floating blobs, cursor glow, broad parallax, noise, or continuous rail loops.
 
 ## Later narrative QA matrix
@@ -123,9 +131,9 @@ Ambient motion is not implemented. If later approved, it must be slow, low contr
 
 | Surface / target | Class | Trigger | Purpose | Duration token | Easing token | Distance | Interruptible | Reduced motion | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Homepage hero settlement model | Narrative | Explicit hero visibility or later controlled trigger | Show payment → escrow → distribution convergence | `resolve` | `resolve` | `medium` | Yes | Immediate resolved frame | PLANNED 8B — MOTION REQUIRED |
-| Homepage infrastructure story | Narrative | Explicit sequence trigger | Communicate Marketplace → Payment Intent → Buyer → Escrow → Settlement order | `standard` | `enter` | `small`; `standard` stagger | Yes | All stages immediately present | PLANNED 8B — MOTION OPTIONAL |
-| Homepage Deterministic Branch rail | Narrative | Explicit narrative trigger | Resolve branches into Settlement | `resolve` | `resolve` | `medium` | Yes | Static resolved rail | PLANNED 8B — MOTION REQUIRED |
+| Homepage hero settlement model | Narrative | Initial homepage render | Show payment → escrow → distribution convergence | `standard`; `standard` stagger | `resolve` | `small` decorative marker travel | One-shot CSS | Animation disabled; immediate resolved frame | IMPLEMENTED 8B — 3 stages, 440ms elapsed |
+| Homepage infrastructure story | Narrative | First meaningful visibility (`35%`, bottom `10%` excluded) | Communicate Marketplace → Payment Intent → Buyer → Escrow → Settlement order | `deliberate`; `fast` stagger | `resolve` | `small` decorative marker travel | One-shot visibility signal; CSS sequence | All stages immediately present; no observer or animation | IMPLEMENTED 8B-R1 — 5 stages, 600ms elapsed |
+| Homepage Deterministic Branch rail | Narrative | First meaningful visibility (`35%`, bottom `10%` excluded) | Resolve the directional rail and engineered junctions into Settlement | `deliberate`; `fast` stagger | `resolve` | `small` junction travel | One-shot visibility signal; CSS sequence | Static resolved rail; no observer | IMPLEMENTED 8B-R1 — included in 600ms infrastructure sequence |
 | Homepage trust boundary | Narrative | State/context reveal | Clarify read → prepare → wallet submit boundary | `standard` | `enter` | `small` | Yes | Static full content | PLANNED 8B — MOTION OPTIONAL |
 | Checkout canonical state conclusion | Narrative | Semantically appropriate canonical state change observed after a previous canonical state is known in the mounted experience | Make final state transition legible without fabrication; never replay on initial render | `deliberate` | `resolve` | `small` | Yes | Immediate state | PLANNED 8C — MOTION REQUIRED |
 | Checkout buyer action availability | Interaction | Canonical action projection | Reveal only the truthful available action | `fast` | `enter` | `micro` | Yes | No travel; immediate availability | PLANNED 8C — MOTION OPTIONAL |
