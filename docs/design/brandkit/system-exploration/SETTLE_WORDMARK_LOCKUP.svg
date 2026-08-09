@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 920">
+  <title>Settle horizontal wordmark lockup proportion review</title>
+  <desc>Three neutral horizontal lockup candidates using the complete I-0 mark, with identical compact header contexts and a stacked deck reference.</desc>
+  <defs>
+    <g id="i-0">
+      <path d="M3 4.2 8.2 2l7.2 4.1-3.3 4.1 3.1 2.1 3-3.7 3.3 2.8-6.1 7.4-7.1-4.9-5.3-3.2z"/>
+      <path d="m3 13.4 5.1 3.1 3.7-4.5 3.3 2.2-5.8 7.2L3 17.8z"/>
+    </g>
+  </defs>
+
+  <rect width="1440" height="920" fill="#24231F"/>
+  <style>
+    text { font-family: "Segoe UI Variable", "Segoe UI", Arial, sans-serif; fill: #F5F2E9; }
+    .eyebrow { font-size: 14px; letter-spacing: 2px; font-weight: 700; }
+    .word { font-size: 64px; font-weight: 600; letter-spacing: 0; }
+    .header-word { font-size: 24px; font-weight: 600; letter-spacing: 0; }
+    .note { font-size: 16px; fill: #B9B6AC; }
+    .small-note { font-size: 13px; fill: #B9B6AC; }
+    .mark, .header-mark { fill: #F5F2E9; }
+    .panel { fill: #2C2B26; stroke: #4A4840; stroke-width: 1; }
+    .accent { fill: #7BD5C4; }
+  </style>
+
+  <text x="56" y="58" class="eyebrow">SETTLE / HORIZONTAL LOCKUP / PROPORTION REVIEW</text>
+  <text x="56" y="94" class="note">Complete I-0 mark with fixed Settle typography. Differences are mark scale and gap only.</text>
+
+  <text x="56" y="146" class="eyebrow">LARGE LOCKUPS</text>
+
+  <g transform="translate(80 222)">
+    <text y="-42" class="eyebrow">01</text>
+    <g class="mark" transform="translate(0 -20) scale(1.25)"><use href="#i-0"/></g>
+    <text x="44" y="20" class="word">Settle</text>
+    <text x="0" y="82" class="small-note">30px / 14px</text>
+  </g>
+
+  <g transform="translate(80 410)">
+    <text y="-42" class="eyebrow">02</text>
+    <g class="mark" transform="translate(0 -20) scale(1.4166667)"><use href="#i-0"/></g>
+    <text x="48" y="20" class="word">Settle</text>
+    <text x="0" y="92" class="small-note">34px / 14px</text>
+  </g>
+
+  <g transform="translate(80 612)">
+    <text y="-42" class="eyebrow">03</text>
+    <g class="mark" transform="translate(0 -20) scale(1.5833333)"><use href="#i-0"/></g>
+    <text x="54" y="20" class="word">Settle</text>
+    <text x="0" y="102" class="small-note">38px / 16px</text>
+  </g>
+
+  <text x="760" y="146" class="eyebrow">COMPACT HEADER CONTEXT</text>
+  <g transform="translate(760 174)">
+    <rect width="600" height="82" rx="4" class="panel"/>
+    <text x="24" y="27" class="small-note">01</text>
+    <g class="header-mark" transform="translate(104 24) scale(1.25)"><use href="#i-0"/></g>
+    <text x="148" y="50" class="header-word">Settle</text>
+  </g>
+  <g transform="translate(760 278)">
+    <rect width="600" height="82" rx="4" class="panel"/>
+    <text x="24" y="27" class="small-note">02</text>
+    <g class="header-mark" transform="translate(104 24) scale(1.4166667)"><use href="#i-0"/></g>
+    <text x="152" y="50" class="header-word">Settle</text>
+  </g>
+  <g transform="translate(760 382)">
+    <rect width="600" height="82" rx="4" class="panel"/>
+    <text x="24" y="27" class="small-note">03</text>
+    <g class="header-mark" transform="translate(104 24) scale(1.5833333)"><use href="#i-0"/></g>
+    <text x="158" y="50" class="header-word">Settle</text>
+  </g>
+  <text x="760" y="500" class="small-note">Same header height, padding, background, typography, and alignment.</text>
+
+  <text x="760" y="570" class="eyebrow">STACKED / DECK REFERENCE</text>
+  <g transform="translate(760 505) scale(2.5) translate(-3 0)" class="mark"><use href="#i-0"/></g>
+  <text x="760" y="638" class="word">Settle</text>
+  <text x="760" y="680" class="note">Programmable USDC settlement infrastructure</text>
+  <text x="760" y="846" class="small-note accent">Proportion review only — no final horizontal candidate selected.</text>
+</svg>

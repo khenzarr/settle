@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900">
+  <title>Settle color system comparison</title>
+  <rect width="1440" height="900" fill="#f4f1ea"/>
+  <style>
+    text { font-family: Arial, Helvetica, sans-serif; }
+    .label { font-size: 14px; letter-spacing: 2px; font-weight: 700; }
+    .swatch-label { font-size: 10px; letter-spacing: 1px; font-weight: 700; }
+    .small { font-size: 15px; }
+    .amount { font-size: 28px; font-weight: 700; }
+  </style>
+  <text x="56" y="62" class="label" fill="#17232b">SETTLE / COLOR COMPARISON / IDENTICAL NEUTRAL MOCK</text>
+  <text x="56" y="100" class="small" fill="#17232b">Three dark-first operational palettes. Swatches are candidates, not a final selection.</text>
+
+  <g transform="translate(56 150)">
+    <rect width="420" height="650" rx="16" fill="#24231f"/>
+    <text x="28" y="44" class="label" fill="#f5f2e9">01</text>
+    <text x="28" y="92" class="amount" fill="#f5f2e9">Mineral Settlement</text>
+    <rect x="28" y="126" width="52" height="52" fill="#295d59"/>
+    <rect x="88" y="126" width="52" height="52" fill="#c7a66a"/>
+    <rect x="148" y="126" width="52" height="52" fill="#302f2a"/>
+    <text x="30" y="196" class="swatch-label" fill="#f5f2e9">CORE</text><text x="90" y="196" class="swatch-label" fill="#f5f2e9">ACCENT</text><text x="150" y="196" class="swatch-label" fill="#f5f2e9">SURFACE</text>
+    <text x="28" y="228" class="small" fill="#f5f2e9">Primary text / #F5F2E9</text>
+    <text x="28" y="258" class="small" fill="#bdc5bf">Secondary / #BDC5BF</text>
+    <text x="28" y="310" class="small" fill="#bdc5bf">Settlement flow</text>
+    <path d="M28 340h330l28-18" fill="none" stroke="#7bd5c4" stroke-width="4"/><circle cx="28" cy="340" r="6" fill="#7bd5c4"/><circle cx="358" cy="322" r="6" fill="#7bd5c4"/>
+    <rect x="20" y="382" width="370" height="122" rx="8" fill="#302f2a"/>
+    <text x="28" y="420" class="small" fill="#89d8a8">success</text><text x="28" y="450" class="small" fill="#e5bf75">warning</text><text x="28" y="480" class="small" fill="#f2a0a0">danger</text>
+    <rect x="28" y="530" width="330" height="42" fill="none" stroke="#7bd5c4" stroke-width="3"/><text x="44" y="557" class="small" fill="#f5f2e9">focus</text>
+  </g>
+
+  <g transform="translate(510 150)">
+    <rect width="420" height="650" rx="16" fill="#0c1724"/>
+    <text x="28" y="44" class="label" fill="#f4f8fa">02</text><text x="28" y="92" class="amount" fill="#f4f8fa">Deep Signal</text>
+    <rect x="28" y="126" width="52" height="52" fill="#176e72"/><rect x="88" y="126" width="52" height="52" fill="#e0a66f"/><rect x="148" y="126" width="52" height="52" fill="#13283a"/>
+    <text x="30" y="196" class="swatch-label" fill="#f4f8fa">CORE</text><text x="90" y="196" class="swatch-label" fill="#f4f8fa">ACCENT</text><text x="150" y="196" class="swatch-label" fill="#f4f8fa">SURFACE</text>
+    <text x="28" y="228" class="small" fill="#f4f8fa">Primary text / #F4F8FA</text><text x="28" y="258" class="small" fill="#b8c9d1">Secondary / #B8C9D1</text>
+    <text x="28" y="310" class="small" fill="#b8c9d1">Settlement flow</text><path d="M28 340h330l28-18" fill="none" stroke="#63d9d1" stroke-width="4"/><circle cx="28" cy="340" r="6" fill="#63d9d1"/><circle cx="358" cy="322" r="6" fill="#63d9d1"/>
+    <rect x="20" y="382" width="370" height="122" rx="8" fill="#13283a"/>
+    <text x="28" y="420" class="small" fill="#8fe0ad">success</text><text x="28" y="450" class="small" fill="#edb77b">warning</text><text x="28" y="480" class="small" fill="#f2a1a1">danger</text>
+    <rect x="28" y="530" width="330" height="42" fill="none" stroke="#63d9d1" stroke-width="3"/><text x="44" y="557" class="small" fill="#f4f8fa">focus</text>
+  </g>
+
+  <g transform="translate(964 150)">
+    <rect width="420" height="650" rx="16" fill="#111315"/>
+    <text x="28" y="44" class="label" fill="#f7faf7">03</text><text x="28" y="92" class="amount" fill="#f7faf7">Resolved Light</text>
+    <rect x="28" y="126" width="52" height="52" fill="#14645f"/><rect x="88" y="126" width="52" height="52" fill="#8fae9c"/><rect x="148" y="126" width="52" height="52" fill="#20272a"/>
+    <text x="30" y="196" class="swatch-label" fill="#f7faf7">CORE</text><text x="90" y="196" class="swatch-label" fill="#f7faf7">ACCENT</text><text x="150" y="196" class="swatch-label" fill="#f7faf7">SURFACE</text>
+    <text x="28" y="228" class="small" fill="#f7faf7">Primary text / #F7FAF7</text><text x="28" y="258" class="small" fill="#b7c1bf">Secondary / #B7C1BF</text>
+    <text x="28" y="310" class="small" fill="#b7c1bf">Settlement flow</text><path d="M28 340h330l28-18" fill="none" stroke="#52c7bd" stroke-width="4"/><circle cx="28" cy="340" r="6" fill="#52c7bd"/><circle cx="358" cy="322" r="6" fill="#52c7bd"/>
+    <rect x="20" y="382" width="370" height="122" rx="8" fill="#20272a"/>
+    <text x="28" y="420" class="small" fill="#8cdda9">success</text><text x="28" y="450" class="small" fill="#d9b86e">warning</text><text x="28" y="480" class="small" fill="#ef9b9b">danger</text>
+    <rect x="28" y="530" width="330" height="42" fill="none" stroke="#52c7bd" stroke-width="3"/><text x="44" y="557" class="small" fill="#f7faf7">focus</text>
+  </g>
+</svg>
