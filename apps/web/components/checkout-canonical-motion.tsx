@@ -48,7 +48,7 @@ export function CheckoutCanonicalMotion({ paymentIntent }: { paymentIntent: Paym
 
   return <>
     <header className={`checkout-summary ${motionClass}`}><div><p className="eyebrow">Settle · hosted checkout</p><p className="checkout-kicker">Payment amount</p><p className="amount" aria-label={`${paymentIntent.amount.usdc} USDC`}>{paymentIntent.amount.usdc}<span className="amount-unit">USDC</span></p></div><div className="checkout-status"><span className={`status-badge ${presentation.tone}`}>Canonical status: {canonicalStatus}</span><p><strong>{presentation.headline}.</strong> {presentation.description}</p><span className="canonical-resolve-marker" aria-hidden="true">Converge <i /> Resolve</span></div></header>
-    <BuyerPaymentFlow paymentIntent={paymentIntent} onCanonicalOrder={observe} />
+    <BuyerPaymentFlow paymentIntent={paymentIntent} canonicalPaymentState={state} onCanonicalOrder={observe} />
     {split}
   </>;
 }

@@ -20,6 +20,13 @@ export function shouldAnimateCanonicalTransition(
   return transition !== null && !reducedMotion;
 }
 
+export function shouldExposeBuyerPaymentAction(
+  initialActionAvailable: boolean,
+  canonicalState: PaymentState,
+): boolean {
+  return initialActionAvailable && canonicalState === "awaiting-payment";
+}
+
 export function paymentStateFromCanonicalOrder(status: string, fundingDeadlineExpired: boolean): PaymentState {
   switch (Number(status)) {
     case OrderStatus.Created: return fundingDeadlineExpired ? "payment-window-expired" : "awaiting-payment";

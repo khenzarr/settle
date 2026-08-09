@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { observeCanonicalState, paymentStateFromCanonicalOrder, shouldAnimateCanonicalTransition } from "./checkout-motion.ts";
+import { observeCanonicalState, paymentStateFromCanonicalOrder, shouldAnimateCanonicalTransition, shouldExposeBuyerPaymentAction } from "./checkout-motion.ts";
 
 test("initial canonical observation does not trigger resolve motion", () => {
   const result = observeCanonicalState({ observedState: null }, "completed");
@@ -38,4 +38,12 @@ test("canonical order projection preserves Created expiry and lifecycle semantic
   assert.equal(paymentStateFromCanonicalOrder("1", false), "awaiting-payment");
   assert.equal(paymentStateFromCanonicalOrder("1", true), "payment-window-expired");
   assert.deepEqual([2, 3, 4, 5, 6].map((status) => paymentStateFromCanonicalOrder(String(status), false)), ["funded", "disputed", "completed", "refunded", "cancelled"]);
+});
+
+test("buyer payment action is suppressed after every non-payable canonical transition", () => {
+  assert.equal(shouldExposeBuyerPaymentAction(true, "awaiting-payment"), true);
+  for (const state of ["planned", "payment-window-expired", "funded", "disputed", "completed", "refunded", "cancelled"] as const) {
+    assert.equal(shouldExposeBuyerPaymentAction(true, state), false);
+  }
+  assert.equal(shouldExposeBuyerPaymentAction(false, "awaiting-payment"), false);
 });

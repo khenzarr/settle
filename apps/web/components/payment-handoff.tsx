@@ -8,10 +8,17 @@ export type PaymentHandoffProps = { readonly handoff: PaymentHandoff };
 
 export function PaymentHandoffPanel({ handoff }: PaymentHandoffProps) {
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
 
   async function copyLink() {
-    await navigator.clipboard.writeText(handoff.checkout.url);
-    setCopied(true);
+    setCopyError(false);
+    try {
+      await navigator.clipboard.writeText(handoff.checkout.url);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+      setCopyError(true);
+    }
   }
 
   const shortOrderId = `${handoff.orderId.slice(0, 10)}...${handoff.orderId.slice(-8)}`;
@@ -35,7 +42,8 @@ export function PaymentHandoffPanel({ handoff }: PaymentHandoffProps) {
             <div><dt>Amount</dt><dd className="handoff-value handoff-amount">{handoff.amount.usdc} USDC</dd></div>
             <div><dt>Network</dt><dd className="handoff-value handoff-network">{handoff.network.blockchain}</dd></div>
           </dl>
-          <button className="secondary copy-link-button" type="button" onClick={() => void copyLink()} aria-live="polite">{copied ? "✓ Copied" : "Copy payment link"}</button>
+          <button className="secondary copy-link-button" type="button" onClick={() => void copyLink()}>{copied ? "✓ Copied" : "Copy payment link"}</button>
+          {copyError && <div className="copy-link-recovery" role="status"><p className="read-only-note">Copy is unavailable in this browser. Select the checkout URL below or scan the code instead.</p><code>{handoff.checkout.url}</code></div>}
         </div>
       </div>
     </section>
