@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { parsePublicAppOrigin } from "../lib/public-app-origin.server";
+import { AppShell } from "../components/app-shell";
 
 const metadataBase = (() => {
   try {
@@ -48,7 +49,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={instrumentSans.variable}>{children}</body>
+      <body className={instrumentSans.variable}>
+        <AppShell>{children}</AppShell>
+      </body>
     </html>
   );
 }
