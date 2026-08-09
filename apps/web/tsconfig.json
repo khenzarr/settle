@@ -12,7 +12,10 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "paths": { "@settle/circle": ["../../packages/circle/src/index.ts"] },
+    "paths": {
+      "@settle/circle": ["../../packages/circle/src/index.ts"],
+      "@settle/circle/operator-runtime": ["../../packages/circle/src/operator-runtime.ts"]
+    },
     "plugins": [{ "name": "next" }]
   },
   "include": [

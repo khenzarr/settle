@@ -12,7 +12,7 @@ import {
 import {
   prepareOperatorSettlementDryRun,
   type OperatorSettlementDryRunPreparation,
-} from "@settle/circle";
+} from "@settle/circle/operator-runtime";
 
 export type OperatorActionRequest =
   | {

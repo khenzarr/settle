@@ -10,6 +10,9 @@
   "exports": {
     ".": {
       "node": "./src/index.ts"
+    },
+    "./operator-runtime": {
+      "node": "./src/operator-runtime.ts"
     }
   },
   "scripts": {
