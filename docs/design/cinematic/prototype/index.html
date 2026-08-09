@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The Settlement Register — an isolated Settle cinematic visual animatic prototype.">
+  <title>The Settlement Register — Settle cinematic prototype</title>
+  <link rel="stylesheet" href="settlement-register.css">
+</head>
+<body>
+  <main class="prototype-shell">
+    <header class="prototype-header">
+      <div>
+        <p class="kicker">D4D0.8C.2 · VISUAL PROTOTYPE</p>
+        <h1>The Settlement Register</h1>
+        <p class="intro">One marketplace payment enters controlled escrow, resolves by programmed terms, and registers into quiet finality.</p>
+      </div>
+      <p class="truth-note">Illustrative visual grammar only.<br>Not a live transaction or confirmation.</p>
+    </header>
+
+    <section class="stage-wrap" aria-label="Settlement Register animatic">
+      <div class="stage desktop-stage" data-plate="desktop">
+        <svg class="register register-desktop" viewBox="0 0 1440 810" role="img" aria-labelledby="desktop-title desktop-desc">
+          <title id="desktop-title">The Settlement Register desktop animatic</title>
+          <desc id="desktop-desc">An order becomes a payment intent, one exact value is held between escrow thresholds, a program divides it into three recipient rails, and all rails align to a canonical baseline.</desc>
+          <defs>
+            <linearGradient id="desktop-fade" x1="0" x2="1"><stop stop-color="#24231F" stop-opacity=".98"/><stop offset=".46" stop-color="#24231F" stop-opacity=".2"/><stop offset="1" stop-color="#24231F" stop-opacity="0"/></linearGradient>
+            <mask id="safe-zone"><rect width="1440" height="810" fill="white"/><rect width="620" height="560" fill="black" opacity=".96"/></mask>
+          </defs>
+          <rect width="1440" height="810" fill="#24231F"/>
+          <g class="ledger-field" mask="url(#safe-zone)" aria-hidden="true">
+            <path d="M60 174H1320M40 206H1080M120 238H1380M20 270H1160M80 302H1300"/>
+            <path class="ledger-offset" d="M690 120v510M760 120v510M830 120v510M900 120v510M970 120v510"/>
+            <path class="canonical" d="M44 650H1396"/>
+            <path class="canonical-fine" d="M1060 642h280M1090 658h220"/>
+          </g>
+          <g class="desktop-mechanism">
+            <g class="order" aria-hidden="true"><rect x="710" y="188" width="214" height="112"/><rect x="722" y="176" width="214" height="112"/><path d="M748 215h118M748 238h82M748 262h142"/><path class="order-tick" d="M890 215h18"/><text x="722" y="164">ORDER</text></g>
+            <g class="intent"><rect x="700" y="332" width="270" height="120"/><path d="M728 368h138M728 391h92M728 414h164"/><text x="700" y="318">PAYMENT INTENT</text><text class="amount" x="728" y="437">120.00 USDC</text></g>
+            <g class="escrow"><path class="ingress-rail" d="M936 392h74"/><path class="threshold left-threshold" d="M1000 296v192"/><path class="threshold right-threshold" d="M1160 296v192"/><path class="threshold-cap" d="M984 320h32M1144 320h32M984 464h32M1144 464h32"/><text x="1000" y="274">ESCROW</text><rect class="chamber" x="1010" y="372" width="140" height="40"/><rect class="value-rail" x="1010" y="382" width="140" height="20"/></g>
+            <g class="program"><path class="rule" d="M1198 338v148"/><path class="ticks" d="M1190 365h16M1190 412h16M1190 459h16"/><text x="1184" y="316">PROGRAM</text><text class="share share-70" x="1218" y="370">70</text><text class="share share-20" x="1218" y="417">20</text><text class="share share-10" x="1218" y="464">10</text></g>
+            <g class="recipients"><path class="rail rail-1" d="M1150 382h78l68-68h105"/><path class="rail rail-2" d="M1150 392h128l44 0h79"/><path class="rail rail-3" d="M1150 402h78l68 68h105"/><path class="terminal" d="M1400 298v28M1400 378v28M1400 458v28"/><text x="1280" y="294">84.00</text><text x="1280" y="378">24.00</text><text x="1280" y="474">12.00</text></g>
+            <g class="final-label"><text x="1080" y="700">SETTLED · CANONICAL REGISTER</text></g>
+          </g>
+          <rect class="copy-veil" width="630" height="590" fill="url(#desktop-fade)"/>
+        </svg>
+      </div>
+
+      <div class="stage mobile-stage" data-plate="mobile">
+        <svg class="register register-mobile" viewBox="0 0 390 700" role="img" aria-labelledby="mobile-title mobile-desc">
+          <title id="mobile-title">The Settlement Register mobile animatic</title>
+          <desc id="mobile-desc">A vertical composition carries an order into payment intent, through a central escrow register, into three programmed recipients and a canonical baseline.</desc>
+          <rect width="390" height="700" fill="#24231F"/>
+          <g class="mobile-ledger" aria-hidden="true"><path d="M38 200h314M24 240h342M56 280h286"/><path class="canonical" d="M42 650h306"/></g>
+          <g class="mobile-mechanism">
+            <g class="mobile-order"><rect x="142" y="92" width="106" height="60"/><path d="M158 114h66M158 130h44"/><text x="142" y="80">ORDER</text></g>
+            <g class="mobile-intent"><rect x="128" y="184" width="134" height="58"/><path d="M145 205h82M145 220h54"/><text x="128" y="172">INTENT</text></g>
+            <g class="mobile-escrow"><path class="mobile-ingress" d="M195 242v96"/><path class="threshold" d="M112 298h166M112 430h166"/><path class="threshold-side" d="M128 298v132M262 298v132"/><rect class="chamber" x="145" y="338" width="100" height="44"/><rect class="value-rail" x="145" y="350" width="100" height="20"/><text x="145" y="324">ESCROW</text></g>
+            <g class="mobile-program"><path class="rule" d="M195 458v54"/><path d="M178 474h34M178 490h34M178 506h34"/><text x="218" y="481">70</text><text x="218" y="497">20</text><text x="218" y="513">10</text><text x="151" y="450">PROGRAM</text></g>
+            <g class="mobile-recipients"><path class="rail rail-1" d="M195 512l-74 76h-42"/><path class="rail rail-2" d="M195 512v76"/><path class="rail rail-3" d="M195 512l74 76h42"/><path class="terminal" d="M78 588h-16M195 588h-16M312 588h16"/></g>
+            <text class="mobile-final" x="108" y="674">SETTLED</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="review-overlay" aria-live="polite"><span class="beat-number">00</span><span class="beat-name">QUIET REGISTER</span><span class="beat-time">0.00s / 12.00s</span></div>
+    </section>
+
+    <section class="review-bar" aria-label="Prototype playback controls">
+      <div class="controls"><button type="button" data-action="play">Play / Replay</button><button type="button" data-action="pause">Pause</button><button type="button" data-action="reduced" aria-pressed="false">Reduced motion preview</button></div>
+      <div class="timeline"><div class="timeline-track"><span class="timeline-progress"></span></div><div class="scene-markers"><span>00 REGISTER</span><span>04 ESCROW</span><span>05 PROGRAM</span><span>07 FINALITY</span><span>08 REST</span></div></div>
+      <p class="mobile-note"><strong>≤360px recommendation:</strong> use the resolved poster frame rather than compressing active rails.</p>
+    </section>
+
+    <footer class="prototype-footer"><p>Prototype review targets: 1440 × 900 desktop · 390 × 844 mobile</p><p>Press <kbd>Space</kbd> to pause/resume. No production route, package, or binary asset is involved.</p></footer>
+  </main>
+  <script src="settlement-register.js"></script>
+</body>
+</html>
