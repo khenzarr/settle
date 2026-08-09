@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { OrderStatus } from "@settle/shared";
-import { composeBuyerOperationState, projectOrderActionState } from "./order-action-state.ts";
+import { composeBuyerOperationState, isBuyerPaymentActionReady, projectOrderActionState } from "./order-action-state.ts";
 import { createBuyerOperation, projectBuyerOperation, transitionBuyerOperation } from "./buyer-transaction-progress.ts";
 
 const input = (patch: Partial<Parameters<typeof projectOrderActionState>[0]> = {}) => ({ status: OrderStatus.Created, buyer: "0xAbC0000000000000000000000000000000000001", connectedAccount: "0xabc0000000000000000000000000000000000001", fundingDeadlineOpen: true, allowance: 0n, requiredAmount: 100n, ...patch });
@@ -22,14 +22,40 @@ test("terminal statuses suppress all funding and active escrow while distinguish
 test("unknown status is explicitly unsupported and fail closed", () => { const state = projectOrderActionState(input({ status: 99 })); assert.equal(state.phase, "unknown"); assert.equal(state.primaryBuyerAction, "none"); assert.equal(state.fund.reasonCode, "unsupported-status"); });
 test("address comparison is normalized safely", () => { assert.equal(projectOrderActionState(input({ buyer: "  0xABC0000000000000000000000000000000000001  " })).connectedRole, "buyer"); });
 test("no funding action is exposed after Created", () => { for (const status of [OrderStatus.Funded, OrderStatus.Disputed, OrderStatus.Completed, OrderStatus.Refunded, OrderStatus.Cancelled]) { const state = projectOrderActionState(input({ status })); assert.equal(state.approve.available, false); assert.equal(state.fund.available, false); } });
-test("matching approve and fund progress suppresses canonical availability", () => {
+test("idle operation preserves availability while pending operation suppresses it", () => {
+  const idle = projectBuyerOperation(createBuyerOperation("order-1", "approve"));
   const approve = transitionBuyerOperation(createBuyerOperation("order-1", "approve"), { type: "start-submit" });
   const fund = transitionBuyerOperation(createBuyerOperation("order-1", "fund"), { type: "start-submit" });
   assert.equal(projectOrderActionState(input({ allowance: 0n })).approve.available, true);
+  assert.equal(composeBuyerOperationState(projectOrderActionState(input({ allowance: 0n })), idle).approve.available, true);
   assert.equal(composeBuyerOperationState(projectOrderActionState(input({ allowance: 0n })), projectBuyerOperation(approve)).approve.available, false);
   assert.equal(composeBuyerOperationState(projectOrderActionState(input({ allowance: 100n })), projectBuyerOperation(fund)).fund.available, false);
 });
 test("canonical terminal order state remains authoritative", () => {
   const operation = projectBuyerOperation(transitionBuyerOperation(createBuyerOperation("order-1", "fund"), { type: "start-submit" }));
   assert.equal(composeBuyerOperationState(projectOrderActionState(input({ status: OrderStatus.Funded, allowance: 100n })), operation).fund.available, false);
+});
+
+test("buyer payment readiness enables exact-buyer approval only with chain and provider readiness", () => {
+  const approve = projectBuyerOperation(createBuyerOperation("order-1", "approve"));
+  const fund = projectBuyerOperation(createBuyerOperation("order-1", "fund"));
+  const ready = (patch: Partial<Parameters<typeof isBuyerPaymentActionReady>[0]> = {}) => isBuyerPaymentActionReady({ state: projectOrderActionState(input()), action: "approve", operation: approve, buyerOperations: [approve, fund], onRequiredNetwork: true, transactionProviderReady: true, ...patch });
+  assert.equal(ready(), true);
+  assert.equal(ready({ state: projectOrderActionState(input({ connectedAccount: "0x0000000000000000000000000000000000000002" })) }), false);
+  assert.equal(ready({ onRequiredNetwork: false }), false);
+  assert.equal(ready({ transactionProviderReady: false }), false);
+  assert.equal(ready({ state: projectOrderActionState(input({ status: OrderStatus.Completed })) }), false);
+  assert.equal(ready({ state: projectOrderActionState(input({ fundingDeadlineOpen: false, fundingDeadlineExpired: true })) }), false);
+});
+
+test("buyer payment readiness preserves fund path and blocks pending or ambiguous recovery", () => {
+  const approve = projectBuyerOperation(createBuyerOperation("order-1", "approve"));
+  const fund = projectBuyerOperation(createBuyerOperation("order-1", "fund"));
+  const fundState = projectOrderActionState(input({ allowance: 100n }));
+  assert.equal(isBuyerPaymentActionReady({ state: fundState, action: "fund", operation: fund, buyerOperations: [approve, fund], onRequiredNetwork: true, transactionProviderReady: true }), true);
+  const pendingApprove = projectBuyerOperation(transitionBuyerOperation(createBuyerOperation("order-1", "approve"), { type: "start-submit" }));
+  assert.equal(isBuyerPaymentActionReady({ state: fundState, action: "fund", operation: fund, buyerOperations: [pendingApprove, fund], onRequiredNetwork: true, transactionProviderReady: true }), false);
+  const failedApprove = projectBuyerOperation(transitionBuyerOperation(createBuyerOperation("order-1", "approve"), { type: "start-submit" }));
+  assert.equal(failedApprove.recovery, "manual-review");
+  assert.equal(isBuyerPaymentActionReady({ state: projectOrderActionState(input()), action: "approve", operation: failedApprove, buyerOperations: [failedApprove, fund], onRequiredNetwork: true, transactionProviderReady: true }), false);
 });

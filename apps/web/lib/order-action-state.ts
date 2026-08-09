@@ -120,6 +120,30 @@ export function composeBuyerOperationState(state: OrderActionState, operation: B
   if (operation.operation !== "cancel" && state.connectedRole !== "buyer") return state;
   const action = state[operation.operation];
   if (!action.available) return state;
+  if (operation.submitAllowed && operation.recovery === "safe-to-start-new") return state;
   const suppressed = { ...action, available: false, label: operation.statusLabel, message: operation.statusMessage };
   return { ...state, [operation.operation]: suppressed };
+}
+
+export function isBuyerPaymentActionReady(input: {
+  state: OrderActionState | null;
+  action: "approve" | "fund";
+  operation: BuyerOperationState;
+  buyerOperations: readonly BuyerOperationState[];
+  onRequiredNetwork: boolean;
+  transactionProviderReady: boolean;
+}): boolean {
+  const { state, action, operation, buyerOperations, onRequiredNetwork, transactionProviderReady } = input;
+  const hasAmbiguousOperation = buyerOperations.some((candidate) => candidate.isInFlight || candidate.recovery === "confirm-existing" || candidate.recovery === "manual-review");
+  return Boolean(
+    state
+    && state.connectedRole === "buyer"
+    && state.primaryBuyerAction === action
+    && state[action].available
+    && onRequiredNetwork
+    && transactionProviderReady
+    && operation.submitAllowed
+    && operation.recovery === "safe-to-start-new"
+    && !hasAmbiguousOperation
+  );
 }
