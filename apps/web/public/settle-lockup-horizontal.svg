@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 34" fill="currentColor">
+  <title>Settle horizontal lockup — I-0, live text specification</title>
+  <desc>Production-spec composition: the I-0 symbol is 34 viewBox units high and the live Settle word begins 14 units after the mark. The word remains live text for portability and licensing reasons.</desc>
+  <svg width="34" height="34" viewBox="0 0 24 24">
+    <path d="M3 4.2 8.2 2l7.2 4.1-3.3 4.1 3.1 2.1 3-3.7 3.3 2.8-6.1 7.4-7.1-4.9-5.3-3.2z"/>
+    <path d="m3 13.4 5.1 3.1 3.7-4.5 3.3 2.2-5.8 7.2L3 17.8z"/>
+  </svg>
+  <text x="48" y="24" font-family="Instrument Sans, Segoe UI Variable, Segoe UI, Arial, sans-serif" font-size="22" font-weight="600">Settle</text>
+</svg>
