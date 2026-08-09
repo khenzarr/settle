@@ -213,6 +213,33 @@ button { min-height: 44px; margin-top: 1rem; padding: .7rem 1rem; border: 1px so
   .hero-stage::before, .hero-rail, .flow--deterministic::before, .flow--deterministic .flow-node::after, .flow--deterministic .flow-junction { animation: none; }
 }
 
+.checkout-summary,
+.split-panel,
+.operation-status--active {
+  position: relative;
+  will-change: opacity, transform;
+}
+.checkout-summary.checkout-motion--funded,
+.checkout-summary.checkout-motion--disputed,
+.checkout-summary.checkout-motion--completed,
+.checkout-summary.checkout-motion--refunded,
+.checkout-summary.checkout-motion--cancelled,
+.split-panel.checkout-motion--completed {
+  animation: checkout-canonical-resolve 320ms var(--motion-ease-standard) both;
+}
+.canonical-resolve-marker { display: inline-flex; align-items: center; gap: .45rem; color: var(--muted); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; opacity: 0; }
+.checkout-summary.checkout-motion--completed .canonical-resolve-marker { opacity: 1; }
+.canonical-resolve-marker i { display: inline-block; width: 1.4rem; height: 1px; background: var(--accent); }
+.operation-progress { display: block; width: 100%; height: 2px; margin-bottom: .8rem; overflow: hidden; background: var(--border); }
+.operation-progress::after { display: block; width: 30%; height: 100%; background: var(--accent); content: ""; animation: checkout-pending-rail 900ms ease-in-out infinite alternate; }
+@keyframes checkout-canonical-resolve { from { opacity: .72; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes checkout-pending-rail { from { transform: translateX(-100%); } to { transform: translateX(330%); } }
+@media (prefers-reduced-motion: reduce) {
+  .checkout-summary.checkout-motion--funded, .checkout-summary.checkout-motion--disputed, .checkout-summary.checkout-motion--completed, .checkout-summary.checkout-motion--refunded, .checkout-summary.checkout-motion--cancelled, .split-panel.checkout-motion--completed { animation: none; }
+  .canonical-resolve-marker { opacity: 0; }
+  .operation-progress::after { animation: none; transform: translateX(0); }
+}
+
 /* D4D0.7C2 hosted checkout: hierarchy, deterministic branches, and calm density. */
 .page-frame--checkout .amount { font-family: var(--font-instrument-sans), "Segoe UI Variable", sans-serif; font-size: clamp(3.2rem, 9vw, 5.5rem); letter-spacing: -.055em; }
 .page-frame--checkout .amount-unit { color: var(--text-secondary); font-size: clamp(1rem, 2vw, 1.25rem); letter-spacing: 0; }
