@@ -11,6 +11,70 @@
   --page: var(--background); --surface: var(--surface-1); --surface-soft: var(--surface-2); --text: var(--text-primary); --secondary: var(--text-secondary); --muted: var(--text-muted); --border: var(--border-subtle); --border-accent: var(--border-strong); --accent: var(--settlement-light);
   color: var(--text); background: var(--page); font-family: var(--font-instrument-sans), "Segoe UI Variable", "Segoe UI", Arial, sans-serif; font-synthesis: none;
 }
+
+.settlement-cinematic {
+  position: relative;
+  align-self: center;
+  width: min(62vw, 980px);
+  aspect-ratio: 8 / 5;
+  margin: 0 -8vw 0 -4vw;
+  overflow: hidden;
+  background: #0d1110;
+  isolation: isolate;
+}
+
+.settlement-cinematic::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--background) 0%, rgba(13, 17, 16, .78) 9%, transparent 30%);
+}
+
+.settlement-cinematic__poster,
+.settlement-cinematic__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.settlement-cinematic__video {
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+}
+
+.settlement-cinematic__video.is-ready { opacity: 1; }
+
+.settlement-cinematic__control {
+  position: absolute;
+  z-index: 3;
+  right: clamp(18px, 4vw, 52px);
+  bottom: clamp(16px, 3vw, 34px);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  border: 1px solid rgba(196, 211, 203, .3);
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: rgba(9, 13, 12, .76);
+  color: rgba(232, 238, 232, .82);
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.settlement-cinematic__control:hover { border-color: rgba(123, 213, 196, .7); color: #fff; }
+.settlement-cinematic__control:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.settlement-cinematic__control-mark { width: 12px; color: var(--accent); font-size: 10px; text-align: center; }
 * { box-sizing: border-box; } html { min-width: 320px; background: var(--background); } body { min-width: 320px; min-height: 100vh; margin: 0; background: var(--background); text-rendering: optimizeLegibility; }
 .app-shell { display: flex; min-height: 100vh; flex-direction: column; } .app-main { flex: 1; }
 .shell-container { width: min(calc(100% - (var(--page-gutter) * 2)), var(--shell-max)); margin-inline: auto; } .content-container { width: min(calc(100% - (var(--page-gutter) * 2)), var(--content-max)); margin-inline: auto; } .content-container--wide { max-width: var(--content-wide); }
@@ -32,7 +96,8 @@ button { min-height: 44px; margin-top: 1rem; padding: .7rem 1rem; border: 1px so
 
 /* D4D0.7C1 homepage composition: static Deterministic Branch grammar. */
 .homepage { padding-top: clamp(3.5rem, 8vw, 7.5rem); }
-.homepage-hero { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(17rem, .65fr); gap: clamp(2rem, 8vw, 9rem); align-items: end; padding-bottom: clamp(3.5rem, 8vw, 7rem); }
+.homepage-hero { display: grid; grid-template-columns: minmax(30rem, .9fr) minmax(36rem, 1.1fr); gap: 0; align-items: center; padding-bottom: clamp(3.5rem, 8vw, 7rem); }
+.homepage-hero .hero-copy { position: relative; z-index: 4; }
 .hero-copy { max-width: 52rem; }
 .homepage h1 { max-width: 48rem; font-size: clamp(2.8rem, 6.2vw, 5.8rem); line-height: .98; }
 .homepage .lede { max-width: 43rem; font-size: clamp(1rem, 1.5vw, 1.18rem); }
@@ -123,6 +188,11 @@ button { min-height: 44px; margin-top: 1rem; padding: .7rem 1rem; border: 1px so
   .trust-steps { grid-column: auto; grid-template-columns: 1fr; gap: .8rem; }
   .homepage .section-heading { align-items: flex-start; flex-direction: column; }
 }
+@media (max-width: 900px) {
+  .homepage-hero { grid-template-columns: 1fr; gap: 1.5rem; }
+  .settlement-cinematic { width: 100%; margin: 0; }
+  .settlement-cinematic::before { display: none; }
+}
 @media (max-width: 480px) {
   .homepage { padding-top: 2.75rem; }
   .homepage h1 { font-size: clamp(2.65rem, 13vw, 3.6rem); }
@@ -132,6 +202,7 @@ button { min-height: 44px; margin-top: 1rem; padding: .7rem 1rem; border: 1px so
   .action-row { align-items: stretch; flex-direction: column; }
   .action-row button { width: 100%; margin-top: .65rem; }
   .status-badge { white-space: normal; }
+  .settlement-cinematic { border: 1px solid var(--border-subtle); border-radius: 8px; }
 }
 
 @keyframes settle-branch-rail-resolve-mobile { from { transform: scaleY(0); } }
