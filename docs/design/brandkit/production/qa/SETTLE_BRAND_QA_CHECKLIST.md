@@ -1,11 +1,18 @@
 # Settle production brand QA checklist
 
+## Status key
+
+- **PASS:** automated or provenance evidence completed.
+- **FAIL:** an explicit validation failure.
+- **BLOCKED:** not honestly verifiable in this environment.
+- **APPROVED — B2B2:** generated, machine-checked, and visually approved in the B2B2 human review.
+
 ## Current B2B1 gates
 
 - [ ] Human review confirms source ownership and intended context.
-- [ ] `settle-symbol-master.svg` has byte-equal I-0 `d` attributes, in order.
-- [ ] `settle-symbol-small.svg` has byte-equal I-3 `d` attributes, in order.
-- [ ] Every SVG parses as XML; viewBox is exactly `0 0 24 24` for symbol masters.
+- **PASS — automated:** `settle-symbol-master.svg` has byte-equal I-0 `d` attributes, in order.
+- **PASS — automated:** `settle-symbol-small.svg` has byte-equal I-3 `d` attributes, in order.
+- **PASS — automated:** every production SVG parses as XML; symbol master viewBoxes are `0 0 24 24`.
 - [ ] No `script`, `foreignObject`, event handler, external href/CSS URL, image, data URL, base64, remote reference, embedded font, filter, clip, hidden layer, or unsafe transform exists.
 - [ ] `currentColor` behavior is verified in light and dark contexts.
 - [ ] No unexpected transforms or duplicate geometry drift exists; lockup transform is intentional and documented.
@@ -13,9 +20,9 @@
 - [ ] Mark is flat, monochrome-capable, and legible on approved grounds.
 - [ ] Clearspace and minimum-size rules are applied without ad hoc gap changes.
 - [ ] Wordmark remains live text unless licensing and portability are verified.
-- [ ] Instrument Sans provenance is recorded from the exact upstream source: https://github.com/Instrument/instrument-sans.
-- [ ] The OFL-1.1 license notice is preserved if font files are later sourced for B2B2.
-- [ ] Instrument Sans version/provenance record and source checksum are captured before any later local asset generation.
+- **PASS:** Instrument Sans provenance is recorded from the exact upstream source: https://github.com/Instrument/instrument-sans.
+- **PASS:** verbatim OFL license text is preserved in `licenses/InstrumentSans-OFL.txt`.
+- **PASS:** upstream commit, face filenames, SHA-256 values, axes/style, tools, and date are recorded before export review.
 - [ ] No Microsoft proprietary font binary is downloaded, packaged, or redistributed.
 - [ ] Font binaries/licenses are not packaged in B2B1; app integration is pending D4D0.7.
 - [ ] `tnum` support is verified during D4D0.7 implementation.
@@ -33,12 +40,22 @@
 
 ## B2B2 export gates
 
-- [ ] 16/32/48 favicon raster dimensions and legibility checked.
-- [ ] Apple 180, PWA 192/512 and maskable 512 exports checked.
-- [ ] Maskable mark stays inside the adaptive safe zone.
-- [ ] Favicon uses I-3; normal-size icon exports use I-0 as routed.
-- [ ] OG/social safe areas and 1:1 / 1.91:1 compositions checked.
-- [ ] Naming, MIME type, color profile, transparency, and metadata are deterministic.
+- **PASS — automated; APPROVED — B2B2:** 16/32/48 favicon raster dimensions and output files exist.
+- **PASS — automated; APPROVED — B2B2:** Apple 180, PWA 192/512, maskable 512, avatar 1024, OG 1200x630, and social 1200x675 outputs exist at exact dimensions.
+- **PASS — documented; APPROVED — B2B2:** maskable mark uses a conservative 48% mark field, inside the central adaptive safe zone.
+- **PASS — automated; APPROVED — B2B2:** favicon routing is I-3 at 16px and I-0 at 32/48px; normal-size icons use I-0.
+- **PASS — automated; APPROVED — B2B2:** OG/social compositions have the required aspect ratios and restrained brand content.
+- **PASS — automated; APPROVED — B2B2:** names, dimensions, hashes, and generation settings are recorded in the export manifest.
+
+## B2B2 machine validation record
+
+- **PASS:** all generated SVGs parse through PowerShell/.NET XML parsing.
+- **PASS:** SVG safety scan finds no script, foreignObject, event handler, external href/CSS URL, image, data URL, base64, remote asset, or embedded font binary.
+- **PASS:** outlined SVGs contain no `<text>` element and no font-family dependency.
+- **PASS:** I-0 and I-3 ordered path equality checks pass against the authoritative exploration sources.
+- **PASS:** SHA-256 values in `SETTLE_EXPORT_MANIFEST.md` match generated files.
+- **APPROVED — B2B2:** native 16/20/24/32/48 small-size legibility, contrast on all approved fields, optical lockup matching, and contact-sheet review.
+- **RELEASE-PACKAGING NOTE:** full ICC profile introspection was not available using the isolated raster toolchain. PNGs are standard RGB/RGBA sRGB-compatible outputs, and human review observed no visual color anomaly; deep ICC metadata verification remains outstanding and no ICC certification is claimed.
 
 ## Misuse review
 
