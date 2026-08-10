@@ -34,11 +34,19 @@
     "circle:contract:status": "pnpm --filter @settle/circle contract:status",
     "circle:contract:integrity": "pnpm contracts:build && pnpm --filter @settle/circle contract:integrity",
     "circle:marketplace:preflight": "pnpm --filter @settle/circle marketplace:preflight",
+    "grant:deck:generate": "node scripts/grant-deck/generate-deck.mjs",
+    "grant:deck:export": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/grant-deck/export-qa.ps1 -Render",
+    "grant:deck:contact-sheet": "node scripts/grant-deck/contact-sheet.mjs",
+    "grant:deck:validate": "node scripts/grant-deck/validate-deck.mjs",
     "validate": "pnpm circle:config:check && pnpm contracts:abi:check && pnpm contracts:fmt:check && pnpm contracts:test && pnpm typecheck && pnpm test"
   },
   "devDependencies": {
     "@andresaya/edge-tts": "^1.8.0",
+    "@napi-rs/canvas": "0.1.68",
+    "pdfjs-dist": "4.10.38",
     "playwright": "^1.62.1",
+    "pptxgenjs": "4.0.1",
+    "sharp": "0.35.3",
     "shiki": "^4.4.2"
   }
 }

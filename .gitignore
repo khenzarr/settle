@@ -1,5 +1,6 @@
 ﻿# Grant-demo generated captures, audio, browser profiles, and renders.
 artifacts/grant-demo/
+artifacts/grant-deck/
 
 node_modules/
 **/node_modules/
