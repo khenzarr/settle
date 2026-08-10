@@ -1,0 +1,54 @@
+{
+  "name": "@settle/db",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "exports": {
+    "./client": {
+      "react-server": "./src/client.ts",
+      "node": "./src/client.ts"
+    },
+    "./config": {
+      "react-server": "./src/config.ts",
+      "node": "./src/config.ts"
+    },
+    "./repositories": {
+      "react-server": "./src/repositories/index.ts",
+      "node": "./src/repositories/index.ts"
+    },
+    "./schema": {
+      "react-server": "./src/schema/index.ts",
+      "node": "./src/schema/index.ts"
+    },
+    "./transaction": {
+      "react-server": "./src/transaction.ts",
+      "node": "./src/transaction.ts"
+    },
+    "./types": "./src/types.ts"
+  },
+  "scripts": {
+    "config:check": "node --env-file-if-exists=../../apps/web/.env.local --conditions=react-server scripts/check-config.ts",
+    "db:generate": "drizzle-kit generate --config=drizzle.config.ts --name=m1_a2_persistence_foundation",
+    "db:migrate": "node --env-file-if-exists=../../apps/web/.env.local --conditions=react-server scripts/migrate.ts",
+    "db:validate": "node --env-file-if-exists=../../apps/web/.env.local --conditions=react-server scripts/validate-development.ts",
+    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "test": "node --conditions=react-server --test tests/*.unit.test.ts",
+    "test:integration": "node --env-file-if-exists=../../apps/web/.env.local --conditions=react-server --test tests/*.integration.test.ts"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "@settle/shared": "workspace:*",
+    "drizzle-orm": "^0.44.5",
+    "server-only": "0.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "26.1.2",
+    "drizzle-kit": "^0.31.4",
+    "typescript": "^5.9.0"
+  }
+}
