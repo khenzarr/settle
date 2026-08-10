@@ -1,0 +1,40 @@
+import { join } from "node:path";
+import { artifacts, browser, context, ensure, settle } from "./lib.mjs";
+import { planRequest, urls } from "./config.mjs";
+
+const out = await ensure(join(artifacts, "captures"));
+const instance = await browser();
+const ctx = await context(instance);
+const page = await ctx.newPage();
+async function shot(id, url, target) {
+  const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45_000 });
+  if (!response?.ok()) throw new Error(`${id}: HTTP ${response?.status()}`);
+  await settle(page);
+  if (target) await page.locator(target).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: join(out, `${id}.png`), fullPage: false });
+  console.log(`captured ${id}`);
+}
+await shot("01-home", urls.home, ".homepage-hero");
+await shot("02-demo-checkout", urls.demo, ".checkout-concept");
+await page.locator("#planning-playground").scrollIntoViewIfNeeded();
+await page.locator("#plan-json").fill(JSON.stringify(planRequest, null, 2));
+const requestDone = page.waitForResponse((r) => r.url().endsWith("/api/v1/orders/plan") && r.request().method() === "POST");
+await page.getByRole("button", { name: "Prepare payment plan" }).click();
+const response = await requestDone;
+if (!response.ok()) throw new Error(`planning POST failed: ${response.status()}`);
+await page.locator(".plan-result").waitFor();
+const result = await response.json();
+if (result?.plan?.executionAvailable !== false) throw new Error("planning boundary changed: expected executionAvailable false");
+await page.screenshot({ path: join(out, "03-demo-plan-response.png") });
+console.log("captured 03-demo-plan-response (single permitted non-mutating POST)");
+await shot("04-checkout-completed", urls.checkout, ".page-frame--checkout");
+await page.locator(".handoff-panel").scrollIntoViewIfNeeded().catch(() => page.locator("text=QR").first().scrollIntoViewIfNeeded());
+await page.screenshot({ path: join(out, "05-checkout-handoff.png") });
+await shot("06-arcscan-release", urls.release, "body");
+await shot("07-arcscan-contract", urls.contract, "body");
+await shot("08-docs-quickstart", urls.docs, "#quickstart");
+await page.locator("#settlement").scrollIntoViewIfNeeded();
+await page.screenshot({ path: join(out, "09-docs-settlement.png") });
+await page.locator("#boundaries").scrollIntoViewIfNeeded();
+await page.screenshot({ path: join(out, "10-docs-boundaries.png") });
+await ctx.close(); await instance.close();

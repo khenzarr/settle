@@ -35,5 +35,10 @@
     "circle:contract:integrity": "pnpm contracts:build && pnpm --filter @settle/circle contract:integrity",
     "circle:marketplace:preflight": "pnpm --filter @settle/circle marketplace:preflight",
     "validate": "pnpm circle:config:check && pnpm contracts:abi:check && pnpm contracts:fmt:check && pnpm contracts:test && pnpm typecheck && pnpm test"
+  },
+  "devDependencies": {
+    "@andresaya/edge-tts": "^1.8.0",
+    "playwright": "^1.62.1",
+    "shiki": "^4.4.2"
   }
 }

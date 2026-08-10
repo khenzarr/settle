@@ -1,4 +1,7 @@
-﻿node_modules/
+﻿# Grant-demo generated captures, audio, browser profiles, and renders.
+artifacts/grant-demo/
+
+node_modules/
 **/node_modules/
 
 .next/

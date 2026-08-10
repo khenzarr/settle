@@ -1,0 +1,154 @@
+1
+00:00:00,000 --> 00:00:09,000
+A marketplace adding Pay with USDC
+needs more than a wallet button.
+
+2
+00:00:09,000 --> 00:00:18,000
+It needs payment terms, secure handoff, Arc USDC,
+escrow, programmable payouts, and reconciliation.
+
+3
+00:00:18,000 --> 00:00:26,000
+Here’s the marketplace view:
+exactly 0.05 USDC.
+
+4
+00:00:26,000 --> 00:00:34,000
+Pay with USDC moves to Settle’s planning surface
+without creating an onchain order.
+
+5
+00:00:34,000 --> 00:00:44,500
+The backend sends buyer, amount, deadlines,
+and a 90 / 10 split to POST /api/v1/orders/plan.
+
+6
+00:00:44,500 --> 00:00:55,000
+This is explicitly non-mutating:
+no chain, Circle, or database mutation.
+
+7
+00:00:55,000 --> 00:01:05,000
+Settle returns an order ID, terms hash,
+exact amount, and normalized settlement terms.
+
+8
+00:01:05,000 --> 00:01:15,000
+executionAvailable is false.
+This plan is not an onchain order.
+
+9
+00:01:15,000 --> 00:01:25,500
+Hosted checkout carries canonical context:
+0.05 USDC on Arc Testnet with a 90 / 10 split.
+
+10
+00:01:25,500 --> 00:01:36,000
+The QR contains only the hosted-checkout URL.
+The customer’s wallet authorizes Arc USDC.
+
+11
+00:01:36,000 --> 00:01:45,000
+The monorepo separates web, shared primitives,
+server-only Circle code, contracts, and docs.
+
+12
+00:01:45,000 --> 00:01:56,000
+The Circle SDK client and validated configuration
+live behind a server-only boundary.
+
+13
+00:01:56,000 --> 00:02:07,000
+Circle credentials and custody never enter browser code.
+Contract Platform tooling lives here too.
+
+14
+00:02:07,000 --> 00:02:14,000
+Settle validates the funded order
+and prepares the exact releaseOrder call.
+
+15
+00:02:14,000 --> 00:02:21,000
+Settle decides. Circle’s controlled wallet executes.
+Circle does not decide settlement policy.
+
+16
+00:02:21,000 --> 00:02:30,000
+fundOrder accepts only the stored buyer
+and transfers the exact Arc USDC amount.
+
+17
+00:02:30,000 --> 00:02:39,000
+A balance check rejects transfer mismatch.
+The contract is the canonical escrow boundary.
+
+18
+00:02:39,000 --> 00:02:48,000
+releaseOrder distributes the full amount
+using stored basis-point terms.
+
+19
+00:02:48,000 --> 00:02:57,000
+Refund and dispute paths preserve
+explicit marketplace lifecycle semantics.
+
+20
+00:02:57,000 --> 00:03:08,000
+Buyer, Arc chain, allowance, canonical state,
+and readiness are checked before approve or fund.
+
+21
+00:03:08,000 --> 00:03:16,000
+Final testing surfaced a gating edge case.
+The fix and regression coverage fail closed safely.
+
+22
+00:03:16,000 --> 00:03:23,000
+85 web tests pass.
+167 Foundry contract tests pass.
+
+23
+00:03:23,000 --> 00:03:33,000
+The immutable order is Completed.
+The 0.05 USDC is no longer active escrow.
+
+24
+00:03:33,000 --> 00:03:43,000
+The split paid 0.045 USDC to the merchant
+and 0.005 USDC to the platform.
+
+25
+00:03:43,000 --> 00:03:52,500
+ArcScan shows the real release transaction
+against the verified SettlementEscrow contract.
+
+26
+00:03:52,500 --> 00:04:02,000
+Transfer logs match both recipients.
+The release used Settle’s Circle-controlled path.
+
+27
+00:04:02,000 --> 00:04:12,000
+The contract record confirms verified source,
+Arc context, and the canonical settlement boundary.
+
+28
+00:04:12,000 --> 00:04:21,000
+The docs cover quickstart, API reference,
+checkout, lifecycle, settlement, and Arc configuration.
+
+29
+00:04:21,000 --> 00:04:30,000
+Current evidence is USDC, Developer-Controlled Wallets,
+and Circle Contract Platform infrastructure.
+
+30
+00:04:30,000 --> 00:04:37,500
+Settle connects Payment Intent, wallet-authorized Arc USDC,
+canonical escrow, and programmable settlement.
+
+31
+00:04:37,500 --> 00:04:45,000
+Circle infrastructure stays at the controlled server boundary.
+This is payment infrastructure, not just escrow.
