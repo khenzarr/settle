@@ -12,7 +12,13 @@
 | Circle USDC | PROVEN WITH QUALIFIER | Current Circle product shown as the settlement asset/integration context. |
 | Circle Developer-Controlled Wallets | PROVEN WITH QUALIFIER | Controlled operator contract execution; does not sign buyer transactions or choose policy. |
 | Circle Contract Platform | PROVEN WITH QUALIFIER | Deployment infrastructure shown as documented integration path. |
-| CCTP, Gateway, Paymaster, StableFX, Mint, App Kits, Agent Stack, EURC, USYC, cirBTC | DO NOT CLAIM | None shown as current or planned in the final deck. |
+| “CCTP is currently integrated” | DO NOT CLAIM | CCTP is not currently implemented and must remain outside current-integration lists. |
+| “Settle plans CCTP-powered cross-chain Pay with USDC” | PLANNED | Approved roadmap direction; visibly marked planned on slides 6, 9, and 10. |
+| “Customers can currently pay from any chain” | DO NOT CLAIM | Current buyer funding is Arc-native. Never use “any network” for the planned direction. |
+| “Planned: customers pay native USDC from CCTP-supported source networks while Arc remains the canonical settlement destination” | PLANNED | Preferred strategic thesis and route boundary. Named source networks are illustrative planned test routes, not permanent or universal support claims. |
+| Arc Testnet currently supports Settle's proven settlement | PROVEN WITH EXISTING QUALIFIER | Current proof remains Arc Testnet only, chain 5042002; never imply Arc mainnet deployment. |
+| Gateway, Paymaster, StableFX, Mint, Agent Stack, EURC, USYC, cirBTC | DO NOT CLAIM | Not shown as current or planned Circle products in the revised deck. |
+| Arc App Kit / Bridge Kit and Circle Forwarding Service | PLANNED IMPLEMENTATION DETAIL | May appear only in roadmap source/notes as “where appropriate”; they are not added to current or planned Circle-product application answers. |
 | Marketplace integration | PROVEN WITH QUALIFIER | Current planning, canonical-read, Payment Intent and handoff APIs plus hosted reference flow. No existing merchant integration. |
 | Authenticated creation, API keys, webhooks, dashboard, SDK/plugins | PLANNED | Roadmap only. |
 | QR | PROVEN WITH QUALIFIER | QR encodes the canonical hosted checkout URL; it does not transfer USDC or fund escrow. |
@@ -31,7 +37,9 @@
 - **Production vs testnet:** every onchain proof is labeled Arc Testnet; production refers to the web reference surface.
 - **Public API vs controlled operator:** planning/read endpoints are separated from the controlled Circle operator path.
 - **QR semantics:** described as hosted-checkout handoff only.
-- **Circle products:** only USDC, Developer-Controlled Wallets and Contract Platform are shown.
+- **Circle products:** current: USDC, Developer-Controlled Wallets, Contract Platform. Planned: CCTP only.
+- **CCTP boundary:** every visible CCTP treatment is marked planned; no current cross-chain capability is claimed.
+- **Network scope:** planned wording is “CCTP-supported networks,” never “any network.”
 - **Merchant claims:** no live third-party merchant integration is stated.
 - **Traction:** only technical/product proof and test counts are stated.
 - **Automatic behavior:** no automatic settlement/refund/dispute claim.

@@ -5,8 +5,8 @@ param(
 $ErrorActionPreference = "Stop"
 $final = Join-Path $Root "artifacts/grant-deck/final"
 $qa = Join-Path $Root "artifacts/grant-deck/qa"
-$pptx = Join-Path $final "Settle_Circle_2026_Cohort2_Investor_Deck.pptx"
-$pdf = Join-Path $final "Settle_Circle_2026_Cohort2_Investor_Deck.pdf"
+$pptx = Join-Path $final "Settle_Circle_2026_Cohort2_Investor_Deck_v2.pptx"
+$pdf = Join-Path $final "Settle_Circle_2026_Cohort2_Investor_Deck_v2.pdf"
 New-Item -ItemType Directory -Force -Path $final,$qa | Out-Null
 $soffice = "C:\Program Files\LibreOffice\program\soffice.exe"
 if (-not (Test-Path $soffice)) { throw "LibreOffice not found at $soffice" }

@@ -9,7 +9,7 @@ globalThis.ImageData = ImageData;
 globalThis.Path2D = Path2D;
 
 const root = resolve(fileURLToPath(new URL("../../", import.meta.url)));
-const pdfPath = join(root, "artifacts/grant-deck/final/Settle_Circle_2026_Cohort2_Investor_Deck.pdf");
+const pdfPath = join(root, "artifacts/grant-deck/final/Settle_Circle_2026_Cohort2_Investor_Deck_v2.pdf");
 const qa = join(root, "artifacts/grant-deck/qa");
 await mkdir(qa, { recursive: true });
 for (let i = 1; i <= 20; i++) await rm(join(qa, `Slide${i}.PNG`), { force: true });

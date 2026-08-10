@@ -8,8 +8,8 @@ import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 const root = resolve(fileURLToPath(new URL("../../", import.meta.url)));
 const finalDir = join(root, "artifacts/grant-deck/final");
 const qaDir = join(root, "artifacts/grant-deck/qa");
-const pptxPath = join(finalDir, "Settle_Circle_2026_Cohort2_Investor_Deck.pptx");
-const pdfPath = join(finalDir, "Settle_Circle_2026_Cohort2_Investor_Deck.pdf");
+const pptxPath = join(finalDir, "Settle_Circle_2026_Cohort2_Investor_Deck_v2.pptx");
+const pdfPath = join(finalDir, "Settle_Circle_2026_Cohort2_Investor_Deck_v2.pdf");
 const expectedLinks = [
   "https://settle-web-coral.vercel.app",
   "https://settle-web-coral.vercel.app/demo",
@@ -25,9 +25,25 @@ const secretPatterns = [
   /api[_ -]?key\s*[:=]/i,
   /bearer\s+[a-z0-9._-]{16,}/i,
 ];
+const requiredDeckText = [
+  "PLANNED NEXT",
+  "CCTP-powered cross-chain checkout",
+  "CCTP-supported networks",
+  "Cross-chain Pay with USDC",
+  "canonical destination",
+  "CCTP IS NOT CURRENTLY IMPLEMENTED",
+];
+const forbiddenDeckText = [
+  "any network",
+  "CCTP is currently integrated",
+];
 
 function fail(message) {
   throw new Error(message);
+}
+
+function compactText(text) {
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, "");
 }
 
 await Promise.all([stat(pptxPath), stat(pdfPath)]);
@@ -47,6 +63,18 @@ const pdfText = pdfTextByPage.join("\n");
 for (const pattern of secretPatterns) {
   if (pattern.test(pdfText)) fail(`Potential secret pattern found in PDF text: ${pattern}`);
 }
+for (const text of requiredDeckText) {
+  if (!compactText(pdfText).includes(compactText(text))) fail(`Required v2 wording is missing from PDF: ${text}`);
+}
+for (const text of forbiddenDeckText) {
+  if (compactText(pdfText).includes(compactText(text))) fail(`Forbidden wording found in PDF: ${text}`);
+}
+const slide6Text = compactText(pdfTextByPage[5]);
+if (slide6Text.indexOf(compactText("contract platform / deployment")) > slide6Text.indexOf(compactText("planned next"))) {
+  fail("Slide 6 planned callout does not follow the current Circle integrations list");
+}
+if (!compactText(pdfTextByPage[8]).includes(compactText("cctp-supported networks"))) fail("Slide 9 lacks visible CCTP-supported networks wording");
+if (!compactText(pdfTextByPage[9]).includes(compactText("planned expected outcomes"))) fail("Slide 10 outcomes are not visibly marked planned");
 
 const renderFiles = (await readdir(qaDir))
   .filter((name) => /^Slide\d+\.PNG$/i.test(name))
@@ -60,7 +88,7 @@ for (const file of renderFiles) {
   }
   if (stats.entropy < 0.3) fail(`${file} appears blank or near-blank (entropy ${stats.entropy})`);
 }
-await stat(join(qaDir, "Settle_Investor_Deck_Contact_Sheet.png"));
+await stat(join(qaDir, "Settle_Investor_Deck_v2_Contact_Sheet.png"));
 
 let pptxListing = "";
 try {

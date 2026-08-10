@@ -98,9 +98,11 @@
 
 **Evidence/source:** Evidence package lines 42–64, 134–140, 152–158; video requirements map lines 8–12.
 
-**Speaker note:** Circle does not sign buyer transactions and does not choose settlement policy. The buyer wallet signs funding; the controlled operator path executes permitted release.
+**Planned-next callout:** PLANNED NEXT — CCTP-powered cross-chain checkout.
 
-**Claims/qualifiers:** Current Circle products shown: USDC, Developer-Controlled Wallets, Contract Platform/deployment infrastructure. No planned Circle products shown.
+**Speaker note:** Current Circle products are USDC, Developer-Controlled Wallets, and Contract Platform/deployment infrastructure. Planned next is CCTP-powered cross-chain checkout. CCTP is not currently implemented and is deliberately separated from the current Circle integrations list. Circle does not sign buyer transactions and does not choose settlement policy. The buyer wallet signs funding; the controlled operator path executes permitted release.
+
+**Claims/qualifiers:** Current Circle products shown: USDC, Developer-Controlled Wallets, Contract Platform/deployment infrastructure. Planned Circle products shown: CCTP only.
 
 ## Slide 7 — Architecture & codebase
 
@@ -138,36 +140,44 @@
 
 ## Slide 9 — Roadmap
 
-**Headline:** Three milestones from reference proof to merchant readiness.
+**Headline:** From proven Arc settlement to cross-chain USDC and production pilots.
 
-**Purpose:** Connect evidence to a focused productization plan.
+**Purpose:** Communicate the evolution from the proven Arc-native foundation through merchant API productization, planned CCTP-powered cross-chain checkout, and production settlement pilots.
 
-**M1 — Merchant integration foundation:** merchant authentication; API keys/scoped access; idempotent authenticated activation; webhooks/events; sandbox and developer tooling.
+**Today — proven foundation:** Arc Testnet · Pay with USDC · Payment Intent · Hosted Checkout / QR · SettlementEscrow · Circle-controlled release · Canonical Completed settlement.
 
-**M2 — Settlement operations:** reconciliation dashboard; monitoring; refund/dispute tooling; settlement policy/risk controls; production reliability.
+**M1 — Merchant integration foundation / Merchant-ready API:** merchant authentication; scoped API keys; authenticated order activation; idempotency; webhook/lifecycle event delivery; integration sandbox; merchant-ready API boundary.
 
-**M3 — Production expansion:** Arc mainnet readiness/deployment; controlled merchant pilots; SDK/plugin layer where demand is proven; ecosystem integrations; measurable usage.
+**M2 — Cross-chain Pay with USDC — CCTP:** CCTP V2 integration; Arc App Kit / Bridge Kit where appropriate; source-network selection in checkout; route/fee quoting; Circle Forwarding Service where appropriate; Payment Intent ↔ CCTP transfer binding; Arc as canonical settlement destination; cross-chain payment reconciliation; replay/duplicate-payment protection; failure/recovery handling.
+
+**M2 visual route:** CCTP-supported networks (Ethereum / Base / Arbitrum / Solana / …) → CCTP → Arc (canonical destination) → Settle. Named networks illustrate planned supported test routes and do not claim permanent or universal support.
+
+**M3 — Production settlement & merchant pilots:** merchant reconciliation tooling; refund/dispute operations; monitoring and reliability; settlement policy/operational controls; Arc mainnet readiness; controlled merchant pilots; SDK/plugin layer where demand proves it; measurable payment/settlement usage.
 
 **Evidence/source:** Evidence package lines 103–118, 146–148; claim matrix rows 14, 21–23.
 
-**Speaker note:** These are planned milestones with no invented dates or metrics. Mainnet and merchant pilots are outcomes to earn, not current claims.
+**Speaker note / M1 acceptance concept:** A test merchant can authenticate, prepare/activate an order through the intended controlled boundary, retrieve canonical payment state and receive lifecycle events without exposing Settle operator credentials.
 
-**Claims/qualifiers:** All milestone language is PLANNED; no unsupported Circle product expansion is included.
+**Speaker note / M2 acceptance concept:** Demonstrate native USDC payment from supported source-network test routes into Arc, bind the transfer to the exact Settle Payment Intent, reconcile the expected amount, prevent duplicate funding and advance the payment into Settle's canonical settlement lifecycle. A planned test target may include one supported EVM source route → Arc and one supported Solana route → Arc.
+
+**Speaker note / M3 acceptance concept:** Production-grade operational controls, Arc mainnet readiness and a controlled merchant pilot path with measurable settlement evidence.
+
+**Claims/qualifiers:** The foundation is proven on Arc Testnet. M1, M2, and M3 are planned with no invented dates, partners, or metrics. CCTP is not currently implemented. CCTP is the only planned Circle product shown.
 
 ## Slide 10 — Grant use & outcomes
 
-**Headline:** From proven testnet infrastructure to merchant-ready settlement.
+**Headline:** Fund the path from proven Arc settlement to cross-chain merchant pilots.
 
 **Purpose:** Explain how grant support advances the next layer.
 
-**Grant use:** production security/reliability · merchant authentication/execution controls · webhook/reconciliation infrastructure · SDK/tooling/docs · Arc mainnet readiness · controlled pilots · monitoring/testing/audit readiness.
+**Grant use:** merchant authentication/execution controls · webhook/reconciliation infrastructure · CCTP cross-chain checkout integration · Payment Intent ↔ CCTP reconciliation · cross-chain recovery/replay protections · monitoring/reliability · Arc mainnet readiness · controlled merchant pilots · developer tooling/SDK where justified.
 
-**Expected outcomes:** merchant-ready Pay with USDC integration · authenticated settlement API · measurable pilot usage · stronger Circle/Arc developer reference implementation · production-grade reconciliation and operations.
+**Planned expected outcomes:** merchant-ready controlled API · Cross-chain Pay with USDC from CCTP-supported networks, settled canonically on Arc. · observable, reliable pilot operations.
 
 **Footer links:** Product · Docs · GitHub · Verified contract · Release evidence. No Drive video URL until uploaded.
 
 **Evidence/source:** Evidence package lines 114–118, 146–174; application requirements supplied by user.
 
-**Speaker note:** The grant converts a proven reference lifecycle into a controlled, observable merchant integration surface.
+**Speaker note:** Grant use advances merchant authentication and execution controls, webhook and reconciliation infrastructure, CCTP cross-chain checkout integration, Payment Intent to CCTP reconciliation, cross-chain recovery and replay protections, monitoring and reliability, Arc mainnet readiness, controlled merchant pilots, and developer tooling or SDK work where justified. The cross-chain outcome is planned; CCTP is not currently implemented.
 
-**Claims/qualifiers:** No requested grant amount or budget percentages invented; outcomes are forward-looking.
+**Claims/qualifiers:** No requested grant amount, budget percentages, timeline dates, merchant partners, or commercial metrics invented; all CCTP outcomes are forward-looking.
