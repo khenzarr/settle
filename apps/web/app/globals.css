@@ -187,12 +187,21 @@ pre { max-width: 100%; margin: 1.1rem 0 0; padding: 1rem; overflow-x: auto; bord
 .completed-evidence dd { margin-bottom: .7rem; }
 .docs-index { display: flex; flex-wrap: wrap; gap: .25rem; position: sticky; top: 0; z-index: 5; padding: .7rem; background: rgba(36,35,31,.96); }
 .docs-index a { padding: .45rem .65rem; border: 1px solid var(--border); border-radius: 999px; font-size: .78rem; text-decoration: none; }
+.docs-page, .docs-page section, #api-reference { min-width: 0; }
 .docs-page section { scroll-margin-top: 4.5rem; }
-.endpoint-list { display: grid; gap: .8rem; }
-.endpoint-card { margin: 0; padding: 1rem; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); }
-.endpoint-card__top { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
-.endpoint-card__top code { flex: 1; min-width: 14rem; }
-.endpoint-card small { display: block; margin-top: .8rem; color: var(--muted); line-height: 1.5; }
+.endpoint-list { display: grid; min-width: 0; gap: 1rem; margin-top: 1.25rem; }
+.endpoint-card { display: grid; min-width: 0; width: 100%; margin: 0; padding: clamp(1rem, 2.5vw, 1.4rem); border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); }
+.endpoint-card__top { display: flex; min-width: 0; flex-wrap: wrap; gap: .75rem 1rem; align-items: center; justify-content: space-between; padding-bottom: 1rem; border-bottom: 1px solid var(--border-subtle); }
+.endpoint-card__route { display: flex; min-width: 0; flex: 1 1 24rem; align-items: center; gap: .75rem; }
+.endpoint-card__route code { min-width: 0; font-size: .9rem; overflow-wrap: anywhere; }
+.endpoint-card__purpose { margin-top: 1rem; }
+.endpoint-card__example { min-width: 0; width: 100%; margin-top: 1.25rem; }
+.endpoint-card__label { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .55rem; }
+.endpoint-card__label h3, .endpoint-card__errors h3 { margin: 0; color: var(--text); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; }
+.endpoint-card pre { min-width: 0; width: 100%; margin: 0; }
+.endpoint-card pre code { overflow-wrap: normal; }
+.endpoint-card__errors { min-width: 0; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle); }
+.endpoint-card__errors p { margin-top: .55rem; color: var(--muted); font-size: .8rem; line-height: 1.55; }
 .copy-button { min-height: 36px; margin: 0; padding: .4rem .7rem; border-color: var(--border-accent); background: transparent; color: var(--secondary); font-size: .75rem; }
 .docs-page section p + p { margin-top: .8rem; }
 
@@ -233,6 +242,8 @@ pre { max-width: 100%; margin: 1.1rem 0 0; padding: 1rem; overflow-x: auto; bord
   .checkout-concept, .dx-flow { grid-template-columns: 1fr; }
   .dx-page .action-row, .hero-actions { align-items: stretch; flex-direction: column; }
   .button-link { width: 100%; justify-content: center; }
+  .endpoint-card__route { flex-basis: 100%; align-items: flex-start; flex-direction: column; gap: .45rem; }
+  .endpoint-card__top > .copy-button { margin-left: auto; }
 }
 
 @keyframes settle-branch-rail-resolve-mobile { from { transform: scaleY(0); } }
