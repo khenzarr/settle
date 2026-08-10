@@ -20,6 +20,9 @@ function SiteHeader() {
         </div>
         <nav className="site-nav" aria-label="Primary navigation">
           <Link href="/">Home</Link>
+          <Link href="/demo">Demo</Link>
+          <Link href="/docs">Docs</Link>
+          <a href="https://github.com/khenzarr/settle" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
         </nav>
       </div>
     </header>
