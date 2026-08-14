@@ -42,6 +42,8 @@ test("Payment Intent creation is atomic, tenant-isolated, replay-safe, rate-limi
     assert.equal(right.status, 201);
     assert.equal(left.body.id, right.body.id);
     assert.equal(left.body.checkout_url, null);
+    assert.equal(left.body.reconciliation_state, "unobserved");
+    assert.equal(left.body.canonical, null);
     assert.equal([left.replayed, right.replayed].filter(Boolean).length, 1);
     const intentId = String(left.body.id);
     assert.equal((await client.db.select().from(paymentIntents).where(and(eq(paymentIntents.merchantId, tenant.merchantId), eq(paymentIntents.externalOrderId, body.external_order_id)))).length, 1);

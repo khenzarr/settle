@@ -10,7 +10,8 @@ introduce CCTP. All slices are test-environment first.
 - M1.B2 merchant API-key service: persistence, issue/list/authenticate/revoke, scopes, expiry, and audit implemented; management UI remains in the dashboard slice.
 - M1.C Payment Intent API: create/list/detail/queued activation, atomic idempotency, persistent rate limiting, request envelopes, migration, and Neon concurrency validation implemented.
 - M1.D webhook/event delivery: encrypted endpoint secrets, immutable events, signed at-least-once delivery, bounded retries, delivery logs, secret rotation, manual retry, SSRF controls, and worker leases implemented; production scheduler selection remains operational deployment work.
-- M1.E onward: not yet implemented.
+- M1.E reconciliation worker: durable finalized cursor, normalized observations, block-hash reorg invalidation, complete order verification, canonical Payment Intent projection, operator transaction correlation, divergence issues, and verified webhook emission implemented; protected scheduler/RPC monitoring remains operational deployment work.
+- M1.F onward: not yet implemented.
 
 ## M1.A2 — persistence/data foundation
 

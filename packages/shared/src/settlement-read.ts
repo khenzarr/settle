@@ -84,6 +84,7 @@ export interface SettlementEscrowReaderConfig {
   settlementEscrowAddress?: string;
   expectedChainId?: number;
   usdcAddress?: string;
+  blockTag?: bigint;
 }
 
 export interface RawSettlementOrder {
@@ -289,7 +290,7 @@ export function createHttpSettlementRpcTransport(rpcUrl: string, fetcher: typeof
   let nextId = 1;
   return Object.freeze({
     async request(method: string, params: readonly unknown[]): Promise<unknown> {
-      if (!["eth_chainId", "eth_call", "eth_getCode", "eth_getTransactionReceipt", "eth_blockNumber", "eth_getLogs"].includes(method)) {
+      if (!["eth_chainId", "eth_call", "eth_getCode", "eth_getTransactionReceipt", "eth_blockNumber", "eth_getBlockByNumber", "eth_getLogs"].includes(method)) {
         throw new SettlementReadError("INVALID_CONFIGURATION", `Unsupported read-only RPC method: ${method}`);
       }
       let response: Response;
@@ -337,6 +338,10 @@ export function createSettlementEscrowReader(config: SettlementEscrowReaderConfi
   if (!Number.isSafeInteger(expectedChainId) || expectedChainId <= 0) {
     throw new SettlementReadError("INVALID_CONFIGURATION", "Expected chain ID must be a positive safe integer");
   }
+  if (config.blockTag !== undefined && config.blockTag < 0n) {
+    throw new SettlementReadError("INVALID_CONFIGURATION", "Settlement read block tag must be non-negative");
+  }
+  const blockTag = config.blockTag === undefined ? "latest" : `0x${config.blockTag.toString(16)}`;
 
   async function request(method: "eth_chainId" | "eth_call" | "eth_getTransactionReceipt", params: readonly unknown[]): Promise<unknown> {
     try {
@@ -358,7 +363,7 @@ export function createSettlementEscrowReader(config: SettlementEscrowReaderConfi
   }
 
   async function call(address: EvmAddress, data: Hex): Promise<Hex> {
-    return rpcHex(await request("eth_call", [{ to: abiAddress(address), data }, "latest"]), "eth_call result");
+    return rpcHex(await request("eth_call", [{ to: abiAddress(address), data }, blockTag]), "eth_call result");
   }
 
   async function orderExists(orderId: OrderId): Promise<boolean> {

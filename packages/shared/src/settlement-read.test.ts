@@ -353,3 +353,11 @@ test("decodes lifecycle events from the generated ABI with public values and evi
     });
   }
 });
+
+test("pins canonical eth_call reads to an explicit finalized block tag", async () => {
+  const transport = new QueueTransport([CHAIN_ID, functionResult("orderExists", false)]);
+  await createSettlementEscrowReader({ transport, blockTag: 123n }).readSettlementOrderProjection(ORDER_ID);
+  assert.equal(transport.calls[1]?.method, "eth_call");
+  assert.equal(transport.calls[1]?.params[1], "0x7b");
+  assert.throws(() => createSettlementEscrowReader({ transport: new QueueTransport([]), blockTag: -1n }), /block tag/i);
+});

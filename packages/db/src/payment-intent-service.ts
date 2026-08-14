@@ -64,10 +64,13 @@ export function projectMerchantPaymentIntent(record: IntentRecord, checkoutOrigi
     terms_hash: record.termsHash,
     checkout_url: checkoutUrl,
     application_state: record.applicationState,
+    reconciliation_state: record.reconciliationState,
     canonical: record.chainOrder && record.chainOrder.canonicalStatus !== "none" ? {
       status: canonicalStatus(record.chainOrder.canonicalStatus),
       observed_at: record.chainOrder.lastVerifiedAt?.toISOString() ?? null,
       block_number: record.chainOrder.lastVerifiedBlock?.toString() ?? null,
+      block_hash: record.chainOrder.lastVerifiedBlockHash,
+      payload_hash: record.chainOrder.lastVerifiedPayloadHash,
       verification_state: record.chainOrder.verificationState,
     } : null,
     operations: { activation: activation?.state ?? "not_started", settlement: "not_started" },

@@ -1,13 +1,13 @@
 # Settle
 
-Settle is API-first USDC payment and marketplace-settlement infrastructure built on Arc. The current test-mode foundation combines deterministic settlement contracts, Circle-controlled operations, a buyer checkout experience, merchant identity and onboarding, tenant-safe PostgreSQL persistence, revocable merchant API keys, an idempotent Payment Intent API, and signed at-least-once merchant webhooks.
+Settle is API-first USDC payment and marketplace-settlement infrastructure built on Arc. The current test-mode foundation combines deterministic settlement contracts, Circle-controlled operations, a buyer checkout experience, merchant identity and onboarding, tenant-safe PostgreSQL persistence, revocable merchant API keys, an idempotent Payment Intent API, signed at-least-once merchant webhooks, and durable finalized Arc reconciliation.
 
 ## Repository
 
 - `apps/web`: Next.js public demo, buyer checkout, WorkOS sign-in, onboarding, and merchant shell
 - `packages/contracts`: Foundry settlement contracts and Solidity tests
 - `packages/circle`: Circle wallet/contract operator tooling and integrity checks
-- `packages/db`: Drizzle schema, migrations, tenant-aware repositories, identity persistence, API-key lifecycle, Payment Intents, distributed rate limits, and webhook delivery workers
+- `packages/db`: Drizzle schema, migrations, tenant-aware repositories, identity persistence, API-key lifecycle, Payment Intents, distributed rate limits, webhook delivery, and Arc reconciliation workers
 - `packages/shared`: shared protocol, validation, and canonical lifecycle primitives
 - `docs/productization`: implementation plans, security boundaries, and slice evidence
 
@@ -95,9 +95,32 @@ private, loopback, link-local, internal, redirected, oversized-response, and uns
 destinations. Automatic retries are limited to timeouts, network failures, `408`, `429`,
 and `5xx` responses.
 
-`payment_intent.created` is emitted atomically in this slice. Canonical funded and final
-events are supported by the event layer but will only be emitted after M1.E independently
-verifies the Arc lifecycle; M1.D does not fabricate chain transitions.
+`payment_intent.created` is emitted atomically with Payment Intent creation. Funded,
+disputed, completed, refunded, cancelled, and payment-window-expired notifications are
+emitted only from M1.E finalized Arc observations; the webhook layer does not fabricate
+chain transitions.
+
+## Arc reconciliation
+
+Validate the bounded worker configuration, then process one resumable scan batch:
+
+```sh
+pnpm reconciliation:config:check
+pnpm reconciliation:work -- --runs=1
+```
+
+The worker scans only through `latest - confirmationDepth`, checkpoints a contract-scoped
+cursor, and leases work with PostgreSQL row locking. It persists normalized log evidence,
+reads the complete SettlementEscrow order at the finalized checkpoint, validates buyer,
+amount, deadlines, terms hash, recipients, and shares, then projects the canonical state.
+RPC failure, malformed ABI data, ambiguity, or immutable disagreement fails closed and
+opens an inspectable reconciliation issue.
+
+The cursor anchor includes the finalized block hash. A mismatch marks prior observations
+orphaned, invalidates affected projections, emits a reconciliation issue, and restarts the
+scan from the canonical deployment block. A transaction hash or successful receipt alone
+never advances a Payment Intent. The worker submits no transaction and performs no Circle
+or settlement operation.
 
 ## Validation
 
