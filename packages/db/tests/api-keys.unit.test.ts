@@ -31,6 +31,7 @@ test("fails closed on weak pepper, malformed bearer values, and invalid scopes",
   assert.equal(readBearerApiKey("Bearer token extra"), undefined);
   assert.equal(parseApiKey("sk_test_invalid"), undefined);
   validateApiKeyScopes(["payment_intents:read"]);
+  validateApiKeyScopes(["webhook_endpoints:write"]);
   assert.throws(() => validateApiKeyScopes([]));
   assert.throws(() => validateApiKeyScopes(["payment_intents:read", "payment_intents:read"]));
   assert.throws(() => validateApiKeyScopes(["admin"]));

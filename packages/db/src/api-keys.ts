@@ -3,7 +3,7 @@ import "server-only";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
 export const API_KEY_DIGEST_VERSION = 1 as const;
-export const API_KEY_SCOPES = ["payment_intents:read", "payment_intents:write"] as const;
+export const API_KEY_SCOPES = ["payment_intents:read", "payment_intents:write", "webhook_endpoints:read", "webhook_endpoints:write"] as const;
 export type ApiKeyScope = (typeof API_KEY_SCOPES)[number];
 
 const KEY_PATTERN = /^sk_test_([A-Za-z0-9_-]{22})_([A-Za-z0-9_-]{43})$/;

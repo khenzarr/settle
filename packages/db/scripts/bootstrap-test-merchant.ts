@@ -13,11 +13,11 @@ function argument(name: string, fallback?: string): string | undefined {
 const name = argument("name")?.trim();
 const slug = argument("slug")?.trim();
 const keyName = argument("key-name", "Local integration")!.trim();
-const rawScopes = argument("scopes", "payment_intents:read,payment_intents:write")!.split(",").map((scope) => scope.trim()).filter(Boolean);
+const rawScopes = argument("scopes", "payment_intents:read,payment_intents:write,webhook_endpoints:read,webhook_endpoints:write")!.split(",").map((scope) => scope.trim()).filter(Boolean);
 const expiresDays = Number(argument("expires-days", "90"));
 
 if (!name || !slug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || !Number.isInteger(expiresDays) || expiresDays < 1 || expiresDays > 365) {
-  throw new Error("Usage: pnpm --filter @settle/db merchant:bootstrap:test -- --name \"Acme\" --slug acme [--key-name \"Local integration\"] [--scopes payment_intents:read,payment_intents:write] [--expires-days 90]");
+  throw new Error("Usage: pnpm --filter @settle/db merchant:bootstrap:test -- --name \"Acme\" --slug acme [--key-name \"Local integration\"] [--scopes payment_intents:read,payment_intents:write,webhook_endpoints:read,webhook_endpoints:write] [--expires-days 90]");
 }
 validateApiKeyScopes(rawScopes);
 const scopes: readonly ApiKeyScope[] = rawScopes;

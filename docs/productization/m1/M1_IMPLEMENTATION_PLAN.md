@@ -9,7 +9,8 @@ introduce CCTP. All slices are test-environment first.
 - M1.B1 merchant identity and secure sessions: implemented; manual hosted-login staging checkpoint remains.
 - M1.B2 merchant API-key service: persistence, issue/list/authenticate/revoke, scopes, expiry, and audit implemented; management UI remains in the dashboard slice.
 - M1.C Payment Intent API: create/list/detail/queued activation, atomic idempotency, persistent rate limiting, request envelopes, migration, and Neon concurrency validation implemented.
-- M1.D onward: not yet implemented.
+- M1.D webhook/event delivery: encrypted endpoint secrets, immutable events, signed at-least-once delivery, bounded retries, delivery logs, secret rotation, manual retry, SSRF controls, and worker leases implemented; production scheduler selection remains operational deployment work.
+- M1.E onward: not yet implemented.
 
 ## M1.A2 — persistence/data foundation
 

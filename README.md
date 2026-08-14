@@ -1,13 +1,13 @@
 # Settle
 
-Settle is API-first USDC payment and marketplace-settlement infrastructure built on Arc. The current test-mode foundation combines deterministic settlement contracts, Circle-controlled operations, a buyer checkout experience, merchant identity and onboarding, tenant-safe PostgreSQL persistence, revocable merchant API keys, and an idempotent Payment Intent API.
+Settle is API-first USDC payment and marketplace-settlement infrastructure built on Arc. The current test-mode foundation combines deterministic settlement contracts, Circle-controlled operations, a buyer checkout experience, merchant identity and onboarding, tenant-safe PostgreSQL persistence, revocable merchant API keys, an idempotent Payment Intent API, and signed at-least-once merchant webhooks.
 
 ## Repository
 
 - `apps/web`: Next.js public demo, buyer checkout, WorkOS sign-in, onboarding, and merchant shell
 - `packages/contracts`: Foundry settlement contracts and Solidity tests
 - `packages/circle`: Circle wallet/contract operator tooling and integrity checks
-- `packages/db`: Drizzle schema, migrations, tenant-aware repositories, identity persistence, API-key lifecycle, Payment Intents, and distributed rate limits
+- `packages/db`: Drizzle schema, migrations, tenant-aware repositories, identity persistence, API-key lifecycle, Payment Intents, distributed rate limits, and webhook delivery workers
 - `packages/shared`: shared protocol, validation, and canonical lifecycle primitives
 - `docs/productization`: implementation plans, security boundaries, and slice evidence
 
@@ -61,6 +61,43 @@ curl -X POST http://localhost:3000/api/v1/payment-intents \
 
 The response is stable across identical retries. Planned or queued intents return
 `checkout_url: null`; no payment link is emitted until canonical activation is independently verified.
+
+## Signed webhooks
+
+Generate a dedicated 32-byte encryption key and set its base64 output as
+`SETTLE_WEBHOOK_ENCRYPTION_KEY_V1`. This key encrypts endpoint-specific signing secrets;
+it is not the signing secret sent to merchants.
+
+```sh
+node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
+```
+
+Create an HTTPS endpoint with a `webhook_endpoints:write` test key. The signing secret
+is returned only on the first successful request; idempotent replays return `secret: null`.
+
+```sh
+curl -X POST http://localhost:3000/api/v1/webhook-endpoints \
+  -H "Authorization: Bearer $SETTLE_TEST_API_KEY" \
+  -H "Idempotency-Key: webhook-create-v1" \
+  -H "Content-Type: application/json" \
+  -d '{"url":"https://merchant.example/webhooks/settle","description":"Test events","subscriptions":["payment_intent.created","payment_intent.funded"]}'
+```
+
+Run one bounded worker batch from a protected scheduler or worker runtime:
+
+```sh
+pnpm --filter @settle/db webhooks:work -- --limit=10
+```
+
+Deliveries sign the exact canonical UTF-8 body with `Settle-Signature:
+t=<unix>,v1=<hex>` and include `Settle-Event-Id`. The worker rejects non-HTTPS,
+private, loopback, link-local, internal, redirected, oversized-response, and unsafe DNS
+destinations. Automatic retries are limited to timeouts, network failures, `408`, `429`,
+and `5xx` responses.
+
+`payment_intent.created` is emitted atomically in this slice. Canonical funded and final
+events are supported by the event layer but will only be emitted after M1.E independently
+verifies the Arc lifecycle; M1.D does not fabricate chain transitions.
 
 ## Validation
 
