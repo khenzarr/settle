@@ -7,11 +7,14 @@ import { apiRateLimitBuckets } from "./schema/index.ts";
 import type { DatabaseExecutor } from "./transaction.ts";
 import type { TenantContext } from "./types.ts";
 
-export type RateLimitRouteGroup = "payment_intents.read" | "payment_intents.write" | "payment_intents.activate";
+export type RateLimitRouteGroup = "payment_intents.read" | "payment_intents.write" | "payment_intents.activate" | "webhook_endpoints.read" | "webhook_endpoints.write" | "webhook_deliveries.retry";
 const LIMITS: Record<RateLimitRouteGroup, Readonly<{ apiKey: number; merchant: number; ip: number }>> = {
   "payment_intents.read": { apiKey: 120, merchant: 600, ip: 240 },
   "payment_intents.write": { apiKey: 60, merchant: 300, ip: 120 },
   "payment_intents.activate": { apiKey: 10, merchant: 50, ip: 20 },
+  "webhook_endpoints.read": { apiKey: 60, merchant: 300, ip: 120 },
+  "webhook_endpoints.write": { apiKey: 20, merchant: 100, ip: 40 },
+  "webhook_deliveries.retry": { apiKey: 10, merchant: 30, ip: 20 },
 };
 
 export class PersistentRateLimitError extends Error {

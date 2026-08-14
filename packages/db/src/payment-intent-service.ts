@@ -9,6 +9,7 @@ import { AuditRepository, IdempotencyRepository, PaymentIntentRepository } from 
 import { operatorExecutions, paymentIntents } from "./schema/index.ts";
 import type { SettleTransaction } from "./transaction.ts";
 import type { TenantContext } from "./types.ts";
+import { emitPaymentIntentWebhookEvent } from "./webhook-service.ts";
 
 const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -151,6 +152,16 @@ export class MerchantPaymentIntentService {
       const record = await repository.findById(input, intentId);
       if (!record) throw new MerchantPaymentIntentError(500, "payment_intent_unavailable", "Payment Intent could not be loaded after creation");
       const body = projectMerchantPaymentIntent(record, input.checkoutOrigin);
+      if (!existing) {
+        await emitPaymentIntentWebhookEvent(tx, {
+          ...input,
+          paymentIntentId: record.id,
+          type: "payment_intent.created",
+          canonicalEventKey: "created:v1",
+          resource: body,
+          occurredAt: now,
+        });
+      }
       await new IdempotencyRepository(tx).complete(idempotency.claim.id, { resourceId: record.id, responseStatus: 201, responseBody: body, now });
       return { status: 201, body, replayed: Boolean(existing) } as const;
     });

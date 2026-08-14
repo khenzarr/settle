@@ -5,7 +5,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { createDatabaseClient } from "../src/client.ts";
 import { MerchantPaymentIntentError, MerchantPaymentIntentService } from "../src/payment-intent-service.ts";
 import { PersistentRateLimitError, PersistentRateLimitService } from "../src/rate-limit-service.ts";
-import { apiRateLimitBuckets, auditEvents, idempotencyKeys, merchantEnvironments, merchants, operatorExecutions, paymentIntentRecipients, paymentIntents } from "../src/schema/index.ts";
+import { apiRateLimitBuckets, auditEvents, idempotencyKeys, merchantEnvironments, merchants, operatorExecutions, paymentIntentRecipients, paymentIntents, webhookDeliveries, webhookDeliveryAttempts, webhookEndpoints, webhookEvents } from "../src/schema/index.ts";
 
 test("Payment Intent creation is atomic, tenant-isolated, replay-safe, rate-limited, and activation only queues", async () => {
   const client = createDatabaseClient(process.env);
@@ -68,6 +68,11 @@ test("Payment Intent creation is atomic, tenant-isolated, replay-safe, rate-limi
   } finally {
     if (merchantIds.length) {
       await client.db.delete(apiRateLimitBuckets).where(inArray(apiRateLimitBuckets.merchantId, merchantIds));
+      const deliveries = await client.db.select({ id: webhookDeliveries.id }).from(webhookDeliveries).where(inArray(webhookDeliveries.merchantId, merchantIds));
+      if (deliveries.length) await client.db.delete(webhookDeliveryAttempts).where(inArray(webhookDeliveryAttempts.deliveryId, deliveries.map((row) => row.id)));
+      await client.db.delete(webhookDeliveries).where(inArray(webhookDeliveries.merchantId, merchantIds));
+      await client.db.delete(webhookEvents).where(inArray(webhookEvents.merchantId, merchantIds));
+      await client.db.delete(webhookEndpoints).where(inArray(webhookEndpoints.merchantId, merchantIds));
       await client.db.delete(auditEvents).where(inArray(auditEvents.merchantId, merchantIds));
       await client.db.delete(idempotencyKeys).where(inArray(idempotencyKeys.merchantId, merchantIds));
       await client.db.delete(operatorExecutions).where(inArray(operatorExecutions.merchantId, merchantIds));

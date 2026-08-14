@@ -5,6 +5,7 @@ import { MerchantApiKeyAuthError, MerchantApiKeyService, type AuthenticatedMerch
 import { loadApiKeyPepperSet, type ApiKeyScope } from "@settle/db/api-keys";
 import { MerchantPaymentIntentError } from "@settle/db/payment-intent-service";
 import { PersistentRateLimitError, PersistentRateLimitService, type RateLimitRouteGroup } from "@settle/db/rate-limit-service";
+import { MerchantWebhookError } from "@settle/db/webhook-service";
 
 import { getWebDatabase } from "../auth/merchant-store.server.ts";
 
@@ -59,9 +60,13 @@ export async function readBoundedJson(request: Request): Promise<unknown> {
 }
 
 export async function requireEmptyActivationBody(request: Request): Promise<void> {
+  return requireEmptyJsonBody(request, "activation_body_not_allowed", "Activation accepts no request fields");
+}
+
+export async function requireEmptyJsonBody(request: Request, code = "request_body_not_allowed", message = "This operation accepts no request fields"): Promise<void> {
   if (!request.body || request.headers.get("content-length") === "0") return;
   const body = await readBoundedJson(request);
-  if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body as object).length !== 0) throw new MerchantPaymentIntentError(400, "activation_body_not_allowed", "Activation accepts no request fields");
+  if (!body || typeof body !== "object" || Array.isArray(body) || Object.keys(body as object).length !== 0) throw new MerchantPaymentIntentError(400, code, message);
 }
 
 export function merchantApiSuccess(body: Record<string, unknown>, status: number, context: MerchantApiRequestContext, replayed = false) {
@@ -89,6 +94,8 @@ export function merchantApiError(cause: unknown, requestId = `req_${randomUUID()
   } else if (cause instanceof PersistentRateLimitError) {
     status = 429; type = "rate_limit_error"; code = "rate_limit_exceeded"; message = cause.message; retryAfter = cause.retryAfterSeconds;
   } else if (cause instanceof MerchantPaymentIntentError) {
+    status = cause.status; type = cause.status >= 500 ? "api_error" : "invalid_request_error"; code = cause.code; message = cause.message; param = cause.param;
+  } else if (cause instanceof MerchantWebhookError) {
     status = cause.status; type = cause.status >= 500 ? "api_error" : "invalid_request_error"; code = cause.code; message = cause.message; param = cause.param;
   }
   return Response.json({ error: { type, code, message, ...(param ? { param } : {}) }, request_id: requestId }, { status, headers: { "x-request-id": requestId, ...(retryAfter ? { "retry-after": String(retryAfter) } : {}) } });

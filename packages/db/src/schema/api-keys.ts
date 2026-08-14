@@ -30,7 +30,7 @@ export const merchantApiKeys = pgTable("merchant_api_keys", {
   check("merchant_api_keys_digest_format", sql`${table.secretDigest} ~ '^[0-9a-f]{64}$'`),
   check("merchant_api_keys_digest_version_positive", sql`${table.digestVersion} > 0`),
   check("merchant_api_keys_scopes_array", sql`jsonb_typeof(${table.scopesJson}) = 'array' and jsonb_array_length(${table.scopesJson}) between 1 and 16`),
-  check("merchant_api_keys_scopes_allowlist", sql`${table.scopesJson} <@ '["payment_intents:read", "payment_intents:write"]'::jsonb`),
+  check("merchant_api_keys_scopes_allowlist", sql`${table.scopesJson} <@ '["payment_intents:read", "payment_intents:write", "webhook_endpoints:read", "webhook_endpoints:write"]'::jsonb`),
   check("merchant_api_keys_expiry_after_creation", sql`${table.expiresAt} is null or ${table.expiresAt} > ${table.createdAt}`),
   check("merchant_api_keys_revocation_after_creation", sql`${table.revokedAt} is null or ${table.revokedAt} >= ${table.createdAt}`),
 ]);
