@@ -15,6 +15,13 @@
       "when": 1786670500260,
       "tag": "0001_m1_b2_api_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786675874513,
+      "tag": "0002_m1_c_payment_intents",
+      "breakpoints": true
     }
   ]
 }

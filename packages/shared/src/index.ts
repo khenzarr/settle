@@ -26,6 +26,8 @@ export { SettlementReadError, createHttpSettlementRpcTransport, createSettlement
 export type { NormalizedOrderTimestamps, RawSettlementOrder, SettlementEscrowReader, SettlementEscrowReaderConfig, SettlementOrderProjection, SettlementOrderProjectionResult, SettlementOrderReadResult, SettlementPayoutProjection, SettlementReadErrorCode, SettlementRpcTransport, SettlementSplitsReadResult, SettlementTransactionReceipt } from "./settlement-read.ts";
 export { canonicalSettlementFields, createMarketplaceOrderPlan, hashSettlementText, marketplaceOrderPlanRequestSchema, normalizeMarketplaceOrderPlanRequest, projectMarketplaceOrder } from "./marketplace.ts";
 export type { MarketplaceExecutionCapability, MarketplaceNetwork, MarketplaceOrderAction, MarketplaceOrderPlan, MarketplaceOrderPlanOrder, MarketplaceOrderPlanRequest, MarketplaceOrderView, MarketplaceSettlementSplit } from "./marketplace.ts";
+export { canonicalMerchantPaymentIntentRequest, merchantPaymentIntentCreateSchema, normalizeMerchantPaymentIntentCreate } from "./merchant-payment-intent.ts";
+export type { MerchantPaymentIntentCreateRequest, NormalizedMerchantPaymentIntentCreate } from "./merchant-payment-intent.ts";
 export { checkoutPath, projectOnchainPaymentIntent, projectPlannedPaymentIntent } from "./payment-intent.ts";
 export type { CanonicalOrderStatus, PaymentIntentSource, PaymentIntentView, PaymentState } from "./payment-intent.ts";
 export { PAYMENT_HANDOFF_QR_CONTENT_TYPE, projectPaymentHandoff } from "./payment-handoff.ts";
