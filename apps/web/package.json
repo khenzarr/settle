@@ -10,7 +10,7 @@
     "demo:readiness": "node --conditions=react-server --env-file-if-exists=../../.env scripts/demo-readiness.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "node --conditions=react-server --test lib/*.test.ts lib/auth/*.unit.test.ts",
+    "test": "node --conditions=react-server --test lib/*.test.ts lib/auth/*.unit.test.ts lib/merchant-api/*.unit.test.ts",
     "test:integration": "node --env-file-if-exists=.env.local --conditions=react-server --test lib/auth/*.integration.test.ts"
   },
   "dependencies": {

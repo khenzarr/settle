@@ -24,6 +24,14 @@
       "react-server": "./src/config.ts",
       "node": "./src/config.ts"
     },
+    "./payment-intent-service": {
+      "react-server": "./src/payment-intent-service.ts",
+      "node": "./src/payment-intent-service.ts"
+    },
+    "./rate-limit-service": {
+      "react-server": "./src/rate-limit-service.ts",
+      "node": "./src/rate-limit-service.ts"
+    },
     "./repositories": {
       "react-server": "./src/repositories/index.ts",
       "node": "./src/repositories/index.ts"
@@ -40,7 +48,7 @@
   },
   "scripts": {
     "config:check": "node --env-file-if-exists=../../.env --conditions=react-server scripts/check-config.ts",
-    "db:generate": "drizzle-kit generate --config=drizzle.config.ts --name=m1_b2_api_keys",
+    "db:generate": "drizzle-kit generate --config=drizzle.config.ts --name=m1_c_payment_intents",
     "db:migrate": "node --env-file-if-exists=../../.env --conditions=react-server scripts/migrate.ts",
     "db:validate": "node --env-file-if-exists=../../.env --conditions=react-server scripts/validate-development.ts",
     "merchant:bootstrap:test": "node --env-file-if-exists=../../.env --conditions=react-server scripts/bootstrap-test-merchant.ts",

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, gt, isNull, or } from "drizzle-orm";
+import { and, desc, eq, gt, gte, isNull, lt, lte, or } from "drizzle-orm";
 import { auditEvents, idempotencyKeys, merchantApiKeys, merchantEnvironments, merchants, paymentIntentRecipients, paymentIntents } from "../schema/index.ts";
 import type { ApiKeyScope } from "../api-keys.ts";
 import type { DatabaseExecutor } from "../transaction.ts";
@@ -21,6 +21,9 @@ export class PaymentIntentRepository {
   async findByExternalOrderId(tenant: TenantContext, externalOrderId: string) {
     return this.db.query.paymentIntents.findFirst({ where: and(eq(paymentIntents.merchantId, tenant.merchantId), eq(paymentIntents.environmentId, tenant.environmentId), eq(paymentIntents.externalOrderId, externalOrderId)), with: { recipients: true, chainOrder: true } });
   }
+  async findById(tenant: TenantContext, id: string) {
+    return this.db.query.paymentIntents.findFirst({ where: and(eq(paymentIntents.id, id), eq(paymentIntents.merchantId, tenant.merchantId), eq(paymentIntents.environmentId, tenant.environmentId)), with: { recipients: true, chainOrder: true, operatorExecutions: true } });
+  }
   async createWithRecipients(tenant: TenantContext, intent: Omit<typeof paymentIntents.$inferInsert, "merchantId" | "environmentId">, recipients: readonly RecipientInput[]) {
     validateRecipients(recipients);
     const created = (await this.db.insert(paymentIntents).values({ ...intent, ...tenant }).returning())[0]!;
@@ -30,6 +33,16 @@ export class PaymentIntentRepository {
   async listRecent(tenant: TenantContext, limit = 50) {
     return this.db.select().from(paymentIntents).where(and(eq(paymentIntents.merchantId, tenant.merchantId), eq(paymentIntents.environmentId, tenant.environmentId))).orderBy(desc(paymentIntents.createdAt), desc(paymentIntents.id)).limit(Math.min(Math.max(limit, 1), 100));
   }
+  async listPage(tenant: TenantContext, input: Readonly<{ limit: number; afterCreatedAt?: Date; afterId?: string; beforeCreatedAt?: Date; beforeId?: string; createdGte?: Date; createdLte?: Date; applicationState?: typeof paymentIntents.$inferSelect.applicationState; externalOrderId?: string }>) {
+    const startingAfter = input.afterCreatedAt && input.afterId ? or(lt(paymentIntents.createdAt, input.afterCreatedAt), and(eq(paymentIntents.createdAt, input.afterCreatedAt), lt(paymentIntents.id, input.afterId))) : undefined;
+    const endingBefore = input.beforeCreatedAt && input.beforeId ? or(gt(paymentIntents.createdAt, input.beforeCreatedAt), and(eq(paymentIntents.createdAt, input.beforeCreatedAt), gt(paymentIntents.id, input.beforeId))) : undefined;
+    return this.db.query.paymentIntents.findMany({
+      where: and(eq(paymentIntents.merchantId, tenant.merchantId), eq(paymentIntents.environmentId, tenant.environmentId), startingAfter, endingBefore, input.createdGte ? gte(paymentIntents.createdAt, input.createdGte) : undefined, input.createdLte ? lte(paymentIntents.createdAt, input.createdLte) : undefined, input.applicationState ? eq(paymentIntents.applicationState, input.applicationState) : undefined, input.externalOrderId ? eq(paymentIntents.externalOrderId, input.externalOrderId) : undefined),
+      with: { recipients: true, chainOrder: true, operatorExecutions: true },
+      orderBy: [desc(paymentIntents.createdAt), desc(paymentIntents.id)],
+      limit: Math.min(Math.max(input.limit, 1), 101),
+    });
+  }
 }
 
 export class IdempotencyRepository {
@@ -37,6 +50,11 @@ export class IdempotencyRepository {
   constructor(db: DatabaseExecutor) { this.db = db; }
   async find(tenant: TenantContext, keyDigest: string) { return this.db.query.idempotencyKeys.findFirst({ where: and(eq(idempotencyKeys.merchantId, tenant.merchantId), eq(idempotencyKeys.environmentId, tenant.environmentId), eq(idempotencyKeys.keyDigest, keyDigest)) }); }
   async claim(tenant: TenantContext, input: Omit<typeof idempotencyKeys.$inferInsert, "merchantId" | "environmentId">) { return (await this.db.insert(idempotencyKeys).values({ ...input, ...tenant }).onConflictDoNothing().returning())[0]; }
+  async findForUpdate(tenant: TenantContext, keyDigest: string) { return (await this.db.select().from(idempotencyKeys).where(and(eq(idempotencyKeys.merchantId, tenant.merchantId), eq(idempotencyKeys.environmentId, tenant.environmentId), eq(idempotencyKeys.keyDigest, keyDigest))).for("update").limit(1))[0]; }
+  async complete(id: string, input: Readonly<{ resourceId: string; responseStatus: number; responseBody: Record<string, unknown>; now?: Date }>) {
+    const now = input.now ?? new Date();
+    return (await this.db.update(idempotencyKeys).set({ resourceId: input.resourceId, responseStatus: input.responseStatus, responseBody: input.responseBody, status: "completed", updatedAt: now }).where(eq(idempotencyKeys.id, id)).returning())[0]!;
+  }
 }
 
 export class AuditRepository {

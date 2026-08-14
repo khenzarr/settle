@@ -7,8 +7,9 @@ introduce CCTP. All slices are test-environment first.
 
 - M1.A2 persistence/data foundation: implemented and validated against the configured Neon target.
 - M1.B1 merchant identity and secure sessions: implemented; manual hosted-login staging checkpoint remains.
-- M1.B2 merchant API-key service: persistence, issue/list/authenticate/revoke, scopes, expiry, and audit implemented; management UI and persistent rate limiting remain for later slices.
-- M1.C onward: not yet implemented.
+- M1.B2 merchant API-key service: persistence, issue/list/authenticate/revoke, scopes, expiry, and audit implemented; management UI remains in the dashboard slice.
+- M1.C Payment Intent API: create/list/detail/queued activation, atomic idempotency, persistent rate limiting, request envelopes, migration, and Neon concurrency validation implemented.
+- M1.D onward: not yet implemented.
 
 ## M1.A2 — persistence/data foundation
 
