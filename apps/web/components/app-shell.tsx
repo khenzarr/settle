@@ -22,6 +22,7 @@ function SiteHeader() {
           <Link href="/">Home</Link>
           <Link href="/demo">Demo</Link>
           <Link href="/docs">Docs</Link>
+          <Link href="/app">Console</Link>
           <a href="https://github.com/khenzarr/settle" target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a>
         </nav>
       </div>

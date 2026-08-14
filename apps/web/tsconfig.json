@@ -14,7 +14,8 @@
     "jsx": "react-jsx",
     "paths": {
       "@settle/circle": ["../../packages/circle/src/index.ts"],
-      "@settle/circle/operator-runtime": ["../../packages/circle/src/operator-runtime.ts"]
+      "@settle/circle/operator-runtime": ["../../packages/circle/src/operator-runtime.ts"],
+      "@settle/db/*": ["../../packages/db/src/*"]
     },
     "plugins": [{ "name": "next" }]
   },

@@ -25,6 +25,7 @@ export const merchantMembers = pgTable("merchant_members", {
   ...timestamps,
 }, (table) => [
   unique("merchant_members_provider_subject_merchant_unique").on(table.provider, table.subject, table.merchantId),
+  unique("merchant_members_merchant_id_id_unique").on(table.merchantId, table.id),
   index("merchant_members_merchant_status_idx").on(table.merchantId, table.status),
   check("merchant_members_provider_not_blank", sql`length(btrim(${table.provider})) > 0`),
   check("merchant_members_subject_not_blank", sql`length(btrim(${table.subject})) > 0`),

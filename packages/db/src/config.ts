@@ -28,7 +28,7 @@ function required(values: DatabaseEnvironment, name: "DATABASE_URL" | "DATABASE_
   return value;
 }
 
-export function classifyDatabaseUrl(value: string): DatabaseConnectionClassification {
+function parseNeonUrl(value: string): URL {
   let url: URL;
   try {
     url = new URL(value);
@@ -38,10 +38,22 @@ export function classifyDatabaseUrl(value: string): DatabaseConnectionClassifica
   if (url.protocol !== "postgres:" && url.protocol !== "postgresql:") {
     throw new DatabaseConfigError("invalid", "Database connection must use PostgreSQL");
   }
-  const hostname = url.hostname.toLowerCase();
-  if (!hostname.endsWith(".neon.tech")) {
+  if (!url.hostname.toLowerCase().endsWith(".neon.tech")) {
     throw new DatabaseConfigError("invalid", "Database connection must target Neon");
   }
+  if (url.searchParams.get("sslmode") !== "require") {
+    throw new DatabaseConfigError("unsafe-target", "Database connection must require TLS");
+  }
+  return url;
+}
+
+function canonicalNeonHostname(url: URL): string {
+  return url.hostname.toLowerCase().replace("-pooler.", ".");
+}
+
+export function classifyDatabaseUrl(value: string): DatabaseConnectionClassification {
+  const url = parseNeonUrl(value);
+  const hostname = url.hostname.toLowerCase();
   return { present: true, provider: "neon", endpoint: hostname.includes("-pooler.") ? "pooled" : "direct" };
 }
 
@@ -53,6 +65,16 @@ export function parseDatabaseConfig(values: DatabaseEnvironment): DatabaseConfig
   if (runtime.endpoint !== "pooled") throw new DatabaseConfigError("unsafe-target", "DATABASE_URL must use a pooled Neon endpoint");
   if (migration.endpoint !== "direct") throw new DatabaseConfigError("unsafe-target", "DATABASE_MIGRATION_URL must use a direct Neon endpoint");
   if (runtimeUrl === migrationUrl) throw new DatabaseConfigError("unsafe-target", "Runtime and migration database connections must be distinct");
+
+  const runtimeTarget = parseNeonUrl(runtimeUrl);
+  const migrationTarget = parseNeonUrl(migrationUrl);
+  if (
+    canonicalNeonHostname(runtimeTarget) !== canonicalNeonHostname(migrationTarget) ||
+    runtimeTarget.username !== migrationTarget.username ||
+    runtimeTarget.pathname !== migrationTarget.pathname
+  ) {
+    throw new DatabaseConfigError("unsafe-target", "Runtime and migration connections must target the same Neon endpoint, role, and database");
+  }
   return { runtimeUrl, migrationUrl };
 }
 

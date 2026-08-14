@@ -3,6 +3,13 @@
 This sequence begins after M1.A1 approval. It does not modify the deployed escrow or
 introduce CCTP. All slices are test-environment first.
 
+## Current implementation checkpoint
+
+- M1.A2 persistence/data foundation: implemented and validated against the configured Neon target.
+- M1.B1 merchant identity and secure sessions: implemented; manual hosted-login staging checkpoint remains.
+- M1.B2 merchant API-key service: persistence, issue/list/authenticate/revoke, scopes, expiry, and audit implemented; management UI and persistent rate limiting remain for later slices.
+- M1.C onward: not yet implemented.
+
 ## M1.A2 — persistence/data foundation
 
 **Goal:** provision managed PostgreSQL, Drizzle schema/migrations, repository interfaces,
