@@ -10,17 +10,23 @@
     "demo:readiness": "node --conditions=react-server --env-file-if-exists=../../.env scripts/demo-readiness.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "node --conditions=react-server --test lib/*.test.ts"
+    "test": "node --conditions=react-server --test lib/*.test.ts lib/auth/*.unit.test.ts",
+    "test:integration": "node --env-file-if-exists=.env.local --conditions=react-server --test lib/auth/*.integration.test.ts"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
     "@settle/circle": "workspace:*",
+    "@settle/db": "workspace:*",
     "@settle/shared": "workspace:*",
+    "@workos-inc/authkit-nextjs": "^4.3.1",
+    "@workos-inc/node": "^10.9.0",
+    "drizzle-orm": "^0.44.7",
     "next": "16.3.0",
     "qrcode.react": "^4.2.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "server-only": "0.0.1"
-    ,"viem": "^2.55.11"
+    "server-only": "0.0.1",
+    "viem": "^2.55.11"
   },
   "devDependencies": {
     "@types/node": "26.1.2",

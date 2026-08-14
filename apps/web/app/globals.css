@@ -254,6 +254,18 @@ pre { max-width: 100%; margin: 1.1rem 0 0; padding: 1rem; overflow-x: auto; bord
   .hero-stage::before, .hero-rail, .flow--deterministic::before, .flow--deterministic .flow-node::after, .flow--deterministic .flow-junction { animation: none; }
 }
 
+.merchant-page h1 { font-size: clamp(2.25rem, 5vw, 3.5rem); letter-spacing: 0; }
+.merchant-panel { max-width: 48rem; border-radius: 8px; }
+.merchant-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.merchant-summary > div { display: grid; gap: .35rem; padding-top: .8rem; border-top: 1px solid var(--border-subtle); }
+.merchant-summary span, .merchant-list span { color: var(--muted); font-size: .78rem; text-transform: capitalize; }
+.merchant-summary strong { color: var(--text-primary); font-size: .95rem; text-transform: capitalize; }
+.merchant-notice { margin-top: 1.5rem; }
+.merchant-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.merchant-list li { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--border-subtle); }
+.merchant-list a { color: var(--text-primary); font-weight: 600; text-decoration: none; }
+@media (max-width: 620px) { .merchant-summary { grid-template-columns: 1fr; } }
+
 .checkout-summary,
 .split-panel,
 .operation-status--active {

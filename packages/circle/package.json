@@ -33,7 +33,7 @@
     "marketplace:preflight": "node --env-file-if-exists=../../.env scripts/preflight-marketplace-lifecycle.ts",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "test": "node --test src/*.test.ts"
+    "test": "forge build --root ../contracts && node --test src/*.test.ts"
   },
   "dependencies": {
     "@circle-fin/developer-controlled-wallets": "10.8.0",

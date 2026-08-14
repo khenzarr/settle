@@ -8,6 +8,14 @@
     "node": ">=22"
   },
   "exports": {
+    "./api-keys": {
+      "react-server": "./src/api-keys.ts",
+      "node": "./src/api-keys.ts"
+    },
+    "./api-key-service": {
+      "react-server": "./src/api-key-service.ts",
+      "node": "./src/api-key-service.ts"
+    },
     "./client": {
       "react-server": "./src/client.ts",
       "node": "./src/client.ts"
@@ -31,14 +39,15 @@
     "./types": "./src/types.ts"
   },
   "scripts": {
-    "config:check": "node --env-file-if-exists=../../apps/web/.env.local --conditions=react-server scripts/check-config.ts",
-    "db:generate": "drizzle-kit generate --config=drizzle.config.ts --name=m1_a2_persistence_foundation",
-    "db:migrate": "node --env-file-if-exists=../../apps/web/.env.local --conditions=react-server scripts/migrate.ts",
-    "db:validate": "node --env-file-if-exists=../../apps/web/.env.local --conditions=react-server scripts/validate-development.ts",
+    "config:check": "node --env-file-if-exists=../../.env --conditions=react-server scripts/check-config.ts",
+    "db:generate": "drizzle-kit generate --config=drizzle.config.ts --name=m1_b2_api_keys",
+    "db:migrate": "node --env-file-if-exists=../../.env --conditions=react-server scripts/migrate.ts",
+    "db:validate": "node --env-file-if-exists=../../.env --conditions=react-server scripts/validate-development.ts",
+    "merchant:bootstrap:test": "node --env-file-if-exists=../../.env --conditions=react-server scripts/bootstrap-test-merchant.ts",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test": "node --conditions=react-server --test tests/*.unit.test.ts",
-    "test:integration": "node --env-file-if-exists=../../apps/web/.env.local --conditions=react-server --test tests/*.integration.test.ts"
+    "test:integration": "node --env-file-if-exists=../../.env --conditions=react-server --test tests/*.integration.test.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
