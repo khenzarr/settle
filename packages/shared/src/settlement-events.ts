@@ -1,4 +1,4 @@
-import { decodeEventLog, type Hex } from "viem";
+import { decodeEventLog, encodeEventTopics, type Hex } from "viem";
 
 import { settlementEscrowAbi } from "./abi/SettlementEscrow.ts";
 import { DisputeResolution, type DisputeResolution as DisputeResolutionValue } from "./order.ts";
@@ -27,6 +27,14 @@ export const SETTLEMENT_ORDER_EVENT_KINDS = [
 ] as const;
 
 export type SettlementOrderEventKind = (typeof SETTLEMENT_ORDER_EVENT_KINDS)[number];
+
+export function settlementOrderEventTopics(): readonly Hex[] {
+  return SETTLEMENT_ORDER_EVENT_KINDS.map((kind) => {
+    const topic = encodeEventTopics({ abi: settlementEscrowAbi, eventName: kind })[0];
+    if (!topic) throw new SettlementReadError("INVALID_CONFIGURATION", `Settlement event ${kind} has no signature topic`);
+    return topic;
+  });
+}
 
 export interface SettlementEventLog {
   transactionHash: string;

@@ -34,6 +34,8 @@
     "circle:contract:status": "pnpm --filter @settle/circle contract:status",
     "circle:contract:integrity": "pnpm contracts:build && pnpm --filter @settle/circle contract:integrity",
     "circle:marketplace:preflight": "pnpm --filter @settle/circle marketplace:preflight",
+    "reconciliation:config:check": "pnpm --filter @settle/db reconciliation:config:check",
+    "reconciliation:work": "pnpm --filter @settle/db reconciliation:work",
     "grant:deck:generate": "node scripts/grant-deck/generate-deck.mjs",
     "grant:deck:export": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/grant-deck/export-qa.ps1 -Render",
     "grant:deck:contact-sheet": "node scripts/grant-deck/contact-sheet.mjs",

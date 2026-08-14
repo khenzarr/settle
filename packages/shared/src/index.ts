@@ -16,7 +16,7 @@ export { calculateSettlementPayouts, settlementSplitSchema, settlementSplitsSche
 export type { SettlementSplit } from "./settlement.ts";
 export { MARKETPLACE_COMMAND_ABI_SIGNATURES, MarketplaceSignerKind, createApproveUsdcPlan, createCancelExpiredOrderPlan, createCreateOrderPlan, createFundOrderPlan, createRaiseDisputePlan, createRefundOrderPlan, createReleaseOrderPlan, createResolveDisputePlan } from "./settlement-command-plan.ts";
 export type { ApproveUsdcCommandPlan, ApproveUsdcPlanInput, CancelExpiredOrderCommandPlan, CancelExpiredOrderPlanInput, CreateOrderCommandPlan, CreateOrderPlanInput, FundOrderCommandPlan, FundOrderPlanInput, MarketplaceCommandChain, MarketplaceCommandPlan, MarketplaceCommandPrerequisite, MarketplaceOperationKind, MarketplaceSignerKind as MarketplaceSignerKindValue, MarketplaceSignerRequirement, MarketplaceStateTransition, MarketplaceStoredOrderInput, MarketplaceUsdcEffect, RaiseDisputeCommandPlan, RaiseDisputePlanInput, RefundOrderCommandPlan, RefundOrderPlanInput, ReleaseOrderCommandPlan, ReleaseOrderPlanInput, ResolveDisputeCommandPlan, ResolveDisputePlanInput } from "./settlement-command-plan.ts";
-export { SETTLEMENT_ORDER_EVENT_KINDS, decodeSettlementOrderEvent } from "./settlement-events.ts";
+export { SETTLEMENT_ORDER_EVENT_KINDS, decodeSettlementOrderEvent, settlementOrderEventTopics } from "./settlement-events.ts";
 export type { SettlementEventLog, SettlementOrderEvent, SettlementOrderEventKind } from "./settlement-events.ts";
 export { MAX_EVIDENCE_LOG_BLOCK_RANGE, SettlementEvidenceError, readOrderEvidence } from "./settlement-evidence.ts";
 export type { OrderEvidence, OrderEvidencePayout, OrderEvidenceTimelineEntry, SettlementEvidenceErrorCode } from "./settlement-evidence.ts";
